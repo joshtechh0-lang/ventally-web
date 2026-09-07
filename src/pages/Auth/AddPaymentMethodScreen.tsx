@@ -146,7 +146,7 @@ export const AddPaymentMethodScreen = () => {
         <ArrowLeft size={20} /> {t('Common.back', 'Back')}
       </button>
 
-      <div className="mb-8">
+      <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-white mb-2">{t('Payment.addMethod', 'Add Payment Method')}</h1>
         <p className="text-sm text-white/80">{t('Payment.secureInfo', 'Your payment information is strictly confidential and secure.')}</p>
       </div>
