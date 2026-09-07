@@ -1,0 +1,283 @@
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import {
+  Home, Users, Wallet, User, Settings, LogOut, ChevronRight, Menu, Bell
+} from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import { logout } from '../../store/slices/userSlice';
+import { setRequests, clearRequests, setAvailability } from '../../store/slices/listenerSlice';
+import { useAvailability } from '../../api/hooks/useAvailability';
+import { getUnreadNotificationCount } from '../../api/notificationsApi';
+import { useWebNotifications } from '../../api/hooks/useWebNotifications';
+import { PushNotificationBanner } from '../ui/PushNotificationBanner';
+import { useGlobalSessionEvents } from '../../api/hooks/useGlobalSessionEvents';
+import { useBackgroundChatRoomJoin } from '../../api/hooks/useBackgroundChatRoomJoin';
+import { ActiveSessionBar } from '../ui/ActiveSessionBar';
+import type { RootState } from '../../store/store';
+import { cn } from '../../utils/cn';
+import socketService from '../../api/socketService';
+
+import { MainBackground } from '../ui/MainBackground';
+import { AppBrandIcon } from '../ui/AppBrandIcon';
+
+// Defining exact 5 tabs used natively in ListenerHomeStack.tsx
+const NAV_ITEMS = [
+  { path: '/listener/home', labelKey: 'Navigation.tabs.home', icon: Home },
+  { path: '/listener/requests', labelKey: 'Navigation.tabs.requests', icon: Users },
+  { path: '/listener/wallet', labelKey: 'Navigation.tabs.wallet', icon: Wallet },
+  { path: '/listener/profile', labelKey: 'Navigation.tabs.profile', icon: User },
+  { path: '/listener/settings', labelKey: 'Navigation.tabs.settings', icon: Settings },
+];
+
+interface ListenerLayoutProps {
+  children: ReactNode;
+}
+
+export const ListenerLayout = ({ children }: ListenerLayoutProps) => {
+  const { t } = useTranslation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { getStatus } = useAvailability();
+  const isAvailable = useSelector((state: RootState) => (state.listener as any).isAvailable as boolean);
+  const user = useSelector((state: RootState) => state.user.user as any);
+
+  useWebNotifications({ autoRequest: true });
+  useGlobalSessionEvents('listener');
+  useBackgroundChatRoomJoin('listener');
+
+  useEffect(() => {
+    getStatus()
+      .then(res => dispatch(setAvailability(res?.status?.isOnline ?? false)))
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await getUnreadNotificationCount();
+        const count = (res as any)?.data?.unreadCount ?? 0;
+        setUnreadCount(count);
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err);
+      }
+    };
+    fetchUnreadCount();
+  }, []);
+
+  const handleLogout = () => {
+    dispatch(logout() as any);
+    socketService.disconnect();
+    navigate('/login');
+  };
+
+  // Socket connection for real-time requests
+  useEffect(() => {
+    const setupSocket = async () => {
+      try {
+        await socketService.connect();
+        console.log('[ListenerLayout] Socket connected');
+
+        // Listen for incoming requests
+        socketService.on('requests:latest', (data: any) => {
+          console.log('[Socket] requests:latest:', data);
+          const requests = data?.requests?.map((item: any) => ({
+            id: item.requestId,
+            type: item.requestType === 'call' ? 'call' : 'message',
+            title: item.requester?.anonymousName ?? 'Anonymous',
+            requestType: item.requestType ?? null,
+            requestId: item.requestId ?? null,
+            venterId: item.requester?.id ?? null,
+            listenerId: item.listenerId ?? null,
+            ratePerMinute: item.ratePerMinute ?? null,
+          }));
+          dispatch(setRequests(requests));
+        });
+
+        const handleNewRequest = (data: any) => {
+          console.log('[Socket] new request:', data);
+          dispatch(setRequests([{
+            id: data.requestId ?? data.id,
+            type: data.requestType === 'call' ? 'call' : 'message',
+            title: data.requester?.anonymousName ?? 'Anonymous',
+            requestType: data.requestType ?? null,
+            requestId: data.requestId ?? data.id ?? null,
+            venterId: data.requester?.id ?? data.venterId ?? null,
+            listenerId: data.listenerId ?? null,
+            ratePerMinute: data.ratePerMinute ?? null,
+          }]));
+        };
+        socketService.on('call:request', handleNewRequest);
+        socketService.on('chat:request', handleNewRequest);
+      } catch (error) {
+        console.error('[ListenerLayout] Socket connection failed:', error);
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+    socketService.off('call:request');
+    socketService.off('chat:request');
+      socketService.off('requests:latest');
+      dispatch(clearRequests());
+    };
+  }, [dispatch]);
+
+  const isActive = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(path + '/');
+
+  // Get incoming requests count from Redux store
+  const requestCount = useSelector((state: RootState) => state.listener.requests.length);
+
+  return (
+    <div className="flex min-h-screen relative">
+      <MainBackground />
+      <div className="relative z-10 flex w-full min-h-screen">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed top-0 left-0 bottom-0 z-50 flex flex-col w-72',
+          'glass border-r border-white/8 [&::before]:hidden [&::after]:hidden',
+          'transition-transform duration-300 ease-smooth',
+          'lg:translate-x-0 lg:static lg:z-auto',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-6 pt-8 pb-8">
+          <AppBrandIcon className="w-10 h-10 rounded-2xl shadow-glow-primary" />
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">{t('Common.appName')}</h1>
+            <p className="text-xs text-gray-400">{t('Common.SupportGuide')}</p>
+          </div>
+        </div>
+
+        {/* Availability Status */}
+        <div className="mx-3 mb-4 glass-accent rounded-2xl px-4 py-3 flex items-center gap-3">
+          <div className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-success animate-pulse-soft' : 'bg-white/30'}`} />
+          <span className={`text-sm font-medium ${isAvailable ? 'text-accent' : 'text-white/40'}`}>
+            {isAvailable ? t('Common.Available', 'Available') : t('Common.Unavailable', 'Unavailable')}
+          </span>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-hide">
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
+            const isRequests = item.path === '/listener/requests';
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={cn('nav-link nav-link-accent', active && 'active')}
+              >
+                <Icon size={18} />
+                <span>{t(item.labelKey)}</span>
+                {isRequests && requestCount > 0 && (
+                  <span className="ml-auto bg-accent text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {requestCount}
+                  </span>
+                )}
+                {active && <ChevronRight size={14} className={cn("ml-auto opacity-50", isRequests && requestCount > 0 && "hidden")} />}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Footer (Simplified precisely to rules) */}
+        <div className="px-3 pb-6 pt-4 border-t border-white/5 space-y-1">
+          <button onClick={() => setShowLogoutModal(true)} className="nav-link w-full text-left text-red-400 hover:text-red-300 hover:bg-red-500/8">
+            <LogOut size={18} />
+            <span>{t('Common.LogOut', 'Logout')}</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-0 overflow-y-auto">
+        {/* Mobile top bar — hidden on desktop */}
+        <div
+          className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 lg:hidden"
+        >
+          <div className="flex items-center gap-2.5">
+            <AppBrandIcon className="w-8 h-8 rounded-xl flex-shrink-0" />
+            <div>
+              <p className="text-xs text-white/60 leading-none">{t('Home.welcomeBack', 'Welcome back,')}</p>
+              <p className="text-sm font-semibold text-white leading-tight mt-0.5">
+                {user?.firstName || user?.displayName?.split(' ')[0] || t('Common.listener', 'Listener')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/listener/notifications')}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] text-white transition-all relative"
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <div className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-primary" />
+              )}
+            </button>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] text-white transition-all"
+            >
+              <Menu size={18} />
+            </button>
+          </div>
+        </div>
+        <ActiveSessionBar role="listener" />
+        <div className="max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 w-full">
+          {localStorage.getItem('hasCompletedSession') === 'true' && <PushNotificationBanner />}
+          {children}
+        </div>
+      </main>
+      </div>
+
+      {/* Logout confirmation modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
+          <div className="glass w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 text-center border border-white/10">
+            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6 sm:hidden" />
+            <div className="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
+              <LogOut size={24} className="text-red-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">{t('Profile.logoutConfirmTitle', 'Log Out?')}</h3>
+            <p className="text-sm text-white/70 mb-8">{t('Profile.logoutConfirmMessage', 'Are you sure you want to log out of your account?')}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-3 rounded-2xl btn-secondary text-white font-medium text-sm transition-colors"
+              >
+                {t('Common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 py-3 rounded-2xl glass border border-white/10 text-white font-medium text-sm hover:bg-white/10 transition-colors"
+              >
+                {t('Common.LogOut', 'Log Out')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

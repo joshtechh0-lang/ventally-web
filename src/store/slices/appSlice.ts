@@ -1,0 +1,78 @@
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+
+export type PreferredLanguage = 'en' | 'pt' | 'fr' | 'es' | null;
+
+export interface CustomBackground {
+  id: string;
+  uri: string;  // base64 data URI — persists across page refreshes
+  name: string;
+}
+
+interface AppState {
+  isLoading: boolean;
+  isDarkMode: boolean;
+  user: {
+    name: string;
+    email: string;
+  } | null;
+  preferredLanguage: PreferredLanguage;
+  customBackgrounds: CustomBackground[];
+  selectedBackgroundId: string;  // always has a value — defaults to '1'
+}
+
+const initialState: AppState = {
+  isLoading: false,
+  isDarkMode: true,
+  user: null,
+  preferredLanguage: null,
+  customBackgrounds: [],
+  selectedBackgroundId: '1',  // Cosmic Dreams by default
+};
+
+const appSlice = createSlice({
+  name: 'app',
+  initialState,
+  reducers: {
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    setUser: (state, action: PayloadAction<{ name: string; email: string } | null>) => {
+      state.user = action.payload;
+    },
+    setPreferredLanguage: (state, action: PayloadAction<PreferredLanguage>) => {
+      state.preferredLanguage = action.payload;
+    },
+    addCustomBackground: (state, action: PayloadAction<CustomBackground>) => {
+      console.log("new bg image", action.payload);
+      if (!state.customBackgrounds) {
+        state.customBackgrounds = [];
+      }
+      state.customBackgrounds.push(action.payload);
+    },
+    removeCustomBackground: (state, action: PayloadAction<string>) => {
+      if (!state.customBackgrounds) {
+        state.customBackgrounds = [];
+        return;
+      }
+      state.customBackgrounds = state.customBackgrounds.filter(bg => bg.id !== action.payload);
+    },
+    setSelectedBackgroundId: (state, action: PayloadAction<string>) => {
+      state.selectedBackgroundId = action.payload;
+    },
+    toggleDarkMode: (state) => {
+      state.isDarkMode = !state.isDarkMode;
+    },
+  },
+});
+
+export const {
+  setLoading,
+  setUser,
+  setPreferredLanguage,
+  addCustomBackground,
+  removeCustomBackground,
+  setSelectedBackgroundId,
+  toggleDarkMode,
+} = appSlice.actions;
+export default appSlice.reducer;

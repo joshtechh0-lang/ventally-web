@@ -1,0 +1,222 @@
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
+import {
+  Home, MessageSquare, Phone, Wallet, Settings, MoreHorizontal,
+  ChevronRight, LogOut, Menu, Bell
+} from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../../store/slices/userSlice';
+import type { RootState } from '../../store/store';
+import { cn } from '../../utils/cn';
+import { getUnreadNotificationCount } from '../../api/notificationsApi';
+import { useWebNotifications } from '../../api/hooks/useWebNotifications';
+import { PushNotificationBanner } from '../ui/PushNotificationBanner';
+import { useGlobalSessionEvents } from '../../api/hooks/useGlobalSessionEvents';
+import { useBackgroundChatRoomJoin } from '../../api/hooks/useBackgroundChatRoomJoin';
+import { ActiveSessionBar } from '../ui/ActiveSessionBar';
+import { MainBackground } from '../ui/MainBackground';
+import { AppBrandIcon } from '../ui/AppBrandIcon';
+
+interface NavItem {
+  path: string;
+  labelKey: string;
+  icon: React.ComponentType<any>;
+}
+
+// STRICT: Only these 6 items as per requirements
+const NAV_ITEMS: NavItem[] = [
+  { path: '/venter/home',     labelKey: 'Navigation.tabs.home',     icon: Home },
+  { path: '/venter/chat',     labelKey: 'Navigation.tabs.messages', icon: MessageSquare },
+  { path: '/venter/calls',    labelKey: 'Navigation.tabs.call',     icon: Phone },
+  { path: '/venter/wallet',   labelKey: 'Navigation.tabs.wallet',   icon: Wallet },
+  { path: '/venter/others',   labelKey: 'Navigation.tabs.others',   icon: MoreHorizontal },
+  { path: '/venter/settings', labelKey: 'Navigation.tabs.settings', icon: Settings },
+];
+
+interface VenterLayoutProps {
+  children: ReactNode;
+}
+
+export const VenterLayout = ({ children }: VenterLayoutProps) => {
+  const { t } = useTranslation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const user = useSelector((state: RootState) => state.user.user as any);
+
+  useWebNotifications({ autoRequest: true });
+  useGlobalSessionEvents('venter');
+  useBackgroundChatRoomJoin('venter');
+
+  const handleLogout = () => {
+    dispatch(logout() as any);
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await getUnreadNotificationCount();
+        const count = (res as any)?.data?.unreadCount ?? 0;
+        setUnreadCount(count);
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err);
+      }
+    };
+    fetchUnreadCount();
+  }, []);
+
+  const isActive = (path: string) => {
+    if (path === '/venter/calls') {
+      // Calls tab is active on the calls page AND when finding/in a call
+      return (
+        location.pathname.startsWith('/venter/calls') ||
+        location.pathname.startsWith('/venter/finding-listener') ||
+        location.pathname.startsWith('/venter/call/')
+      );
+    }
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  return (
+    <div className="flex min-h-screen relative">
+      <MainBackground />
+      {/* All content sits above the background layers */}
+      <div className="relative z-10 flex w-full min-h-screen">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed top-0 left-0 bottom-0 z-50 flex flex-col w-72',
+          'glass border-r border-white/8 [&::before]:hidden [&::after]:hidden',
+          'transition-transform duration-300 ease-smooth',
+          'lg:translate-x-0 lg:static lg:z-auto',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+        style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-6 pt-8 pb-8">
+          <AppBrandIcon className="w-10 h-10 rounded-2xl shadow-glow-primary" />
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">{t('Common.appName')}</h1>
+            <p className="text-xs text-white/80 capitalize">{user?.userType || t('Common.venter')}</p>
+          </div>
+        </div>
+
+        {/* Nav — STRICT 5 items only */}
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-hide">
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={cn('nav-link', active && 'active')}
+              >
+                <Icon size={18} />
+                <span>{t(item.labelKey)}</span>
+                {active && <ChevronRight size={14} className="ml-auto opacity-50" />}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Logout Footer */}
+        <div className="px-3 pb-6 pt-4 border-t border-white/5">
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            className="nav-link w-full text-left text-red-400 hover:text-red-300 hover:bg-red-500/8"
+          >
+            <LogOut size={18} />
+            <span>{t('Profile.logout')}</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-0 overflow-y-auto">
+        {/* Mobile top bar — hidden on desktop */}
+        <div
+          className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 lg:hidden"
+        >
+          <div className="flex items-center gap-2.5">
+            <AppBrandIcon className="w-8 h-8 rounded-xl flex-shrink-0" />
+            <div>
+              <p className="text-xs text-white/60 leading-none">{t('Home.welcomeBack', 'Welcome back,')}</p>
+              <p className="text-sm font-semibold text-white leading-tight mt-0.5">
+                {user?.firstName || user?.displayName?.split(' ')[0] || t('Common.venter', 'Venter')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/venter/notifications')}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] text-white transition-all relative"
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <div className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-primary" />
+              )}
+            </button>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] text-white transition-all"
+            >
+              <Menu size={18} />
+            </button>
+          </div>
+        </div>
+        <ActiveSessionBar role="venter" />
+        <div className="max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 w-full">
+          {localStorage.getItem('hasCheckedInMood') === 'true' && <PushNotificationBanner />}
+          {children}
+        </div>
+      </main>
+      </div>
+
+      {/* Logout confirmation modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
+          <div className="glass w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 text-center border border-white/10">
+            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6 sm:hidden" />
+            <div className="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
+              <LogOut size={24} className="text-red-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">{t('Profile.logoutConfirmTitle', 'Log Out?')}</h3>
+            <p className="text-sm text-white/70 mb-8">{t('Profile.logoutConfirmMessage', 'Are you sure you want to log out of your account?')}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-3 rounded-2xl btn-secondary text-white font-medium text-sm transition-colors"
+              >
+                {t('Common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 py-3 rounded-2xl glass border border-white/10 text-white font-medium text-sm hover:bg-white/10 transition-colors"
+              >
+                {t('Profile.logout', 'Log Out')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

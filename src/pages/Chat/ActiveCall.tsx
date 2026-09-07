@@ -1,0 +1,402 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useSelector, useDispatch, useStore } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import type { RootState } from '../../store/store';
+import { endCall, setMuted, setSpeakerRedux, setCrisisEnded } from '../../store/slices/callSlice';
+import { Mic, MicOff, Phone, AlertTriangle, PhoneCall, MessageSquare, Volume2, VolumeX } from 'lucide-react';
+import { DevicePickerButton } from '../../components/ui/DevicePickerButton';
+const isMobileWebView = typeof (window as any).ReactNativeWebView !== 'undefined' || new URLSearchParams(window.location.search).get('mobile') === '1';
+import type { AudioDeviceInfo } from '../../contexts/AgoraContext';
+import { GlassCard } from '../../components/ui/GlassCard';
+import apiInstance from '../../api/apiInstance';
+import socketService from '../../api/socketService';
+import {
+  useAgoraContext,
+} from '../../contexts/AgoraContext';
+import {
+  joinParamsFromCallPayload,
+  type AgoraCallPayload,
+} from '../../hooks/useAgoraWeb';
+
+/** Real call id for API + feedback routes (URL param is often the placeholder `active` from FindingListener). */
+function useResolvedCallId(
+  roomId: string | undefined,
+  locationState: unknown,
+  session: RootState['session'],
+  callSessionId: string | null,
+): string | undefined {
+  return useMemo(() => {
+    const fromNav = (locationState as { call?: { id?: string; callId?: string } } | null | undefined)?.call;
+    const fromSessionData = session.data as { id?: string; callId?: string } | undefined;
+    const paramLooksLikeId = roomId && roomId !== 'active' ? roomId : null;
+
+    return (
+      fromNav?.callId ||
+      fromNav?.id ||
+      session.sessionId ||
+      session.requestId ||
+      fromSessionData?.callId ||
+      fromSessionData?.id ||
+      callSessionId ||
+      paramLooksLikeId ||
+      undefined
+    );
+  }, [locationState, roomId, session.sessionId, session.requestId, session.data, callSessionId]);
+}
+
+export const ActiveCall = () => {
+  const { t } = useTranslation();
+  const { roomId } = useParams<{ roomId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.user.user as any);
+  const session = useSelector((state: RootState) => state.session);
+  const callSessionId = useSelector((state: RootState) => state.call.sessionId);
+  const callStartTime = useSelector((state: RootState) => state.call.startTime);
+  const role = user?.userType || 'venter';
+
+  const resolvedCallId = useResolvedCallId(roomId, location.state, session, callSessionId);
+  const feedbackSessionId = resolvedCallId ?? roomId;
+
+  const [searchParams] = useSearchParams();
+  const agoraJoinParams = useMemo(() => {
+    const fromNav = (location.state as { call?: AgoraCallPayload } | undefined)?.call;
+    const fromSession = session.data as AgoraCallPayload | undefined;
+    const fromUrl = searchParams.get('token') ? {
+      token: searchParams.get('token') ?? undefined,
+      channelName: searchParams.get('channel') ?? undefined,
+      uid: Number(searchParams.get('uid') ?? 1),
+      agoraAppId: searchParams.get('appId') ?? undefined,
+    } : null;
+    return joinParamsFromCallPayload(fromNav ?? fromUrl ?? fromSession ?? undefined);
+  }, [location.state, session.data, searchParams]);
+
+  const { joinChannel, leaveChannel, toggleMute, setSpeakerEnabled, getAudioDevices, setMicDevice, setOutputDevice, activeMicId, activeOutputId, isJoined } = useAgoraContext();
+  const store = useStore<RootState>();
+
+  // Read mute/speaker from Redux so they survive navigation
+  const muted = useSelector((state: RootState) => state.call.isMuted);
+  const speakerOn = useSelector((state: RootState) => state.call.isSpeakerOn);
+  const [, setTick] = useState(0);
+  const [showEndModal, setShowEndModal] = useState(false);
+  const [showCrisisOverlay, setShowCrisisOverlay] = useState(false);
+  const [audioInputs, setAudioInputs] = useState<AudioDeviceInfo[]>([]);
+  const [audioOutputs, setAudioOutputs] = useState<AudioDeviceInfo[]>([]);
+  const callStatus: 'connecting' | 'connected' | 'ended' = isJoined ? 'connected' : 'connecting';
+
+  // Elapsed time computed from Redux startTime so it survives navigation/remount
+  const effectiveStart = callStartTime ?? null;
+  const duration = effectiveStart ? Math.floor((Date.now() - effectiveStart) / 1000) : 0;
+
+  // Tick every second to re-render the formatted time
+  useEffect(() => {
+    if (!isJoined) return;
+    const interval = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isJoined]);
+
+  // Session persists across navigation on all screen sizes.
+  // The ActiveSessionBar (rendered in VenterLayout / ListenerLayout)
+  // shows a "return to session" banner when the user navigates away.
+
+  // Join Agora — no cleanup leaveChannel so audio persists on navigation
+  useEffect(() => {
+    if (!agoraJoinParams) {
+      console.warn('[ActiveCall] Missing channel/token for Agora — check call:accepted payload.');
+      return;
+    }
+    void joinChannel(agoraJoinParams);
+    // intentionally no leaveChannel in cleanup
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    toggleMute(muted);
+  }, [muted, toggleMute]);
+
+  useEffect(() => {
+    setSpeakerEnabled(speakerOn);
+  }, [speakerOn, setSpeakerEnabled]);
+
+  // Load device lists on mount and whenever devices change (plug/unplug).
+  // Don't gate on isJoined — headphones may already be connected before the call starts.
+  // Re-run when isJoined flips to true so labels are available after mic permission is granted.
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { inputs, outputs } = await getAudioDevices();
+        setAudioInputs(inputs);
+        setAudioOutputs(outputs);
+      } catch { /* ignore — device picker simply won't appear */ }
+    };
+    void load();
+    const handler = () => void load();
+    navigator.mediaDevices?.addEventListener?.('devicechange', handler);
+    return () => navigator.mediaDevices?.removeEventListener?.('devicechange', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Re-load after joining so device labels (which require mic permission) are populated
+  useEffect(() => {
+    if (!isJoined) return;
+    getAudioDevices().then(({ inputs, outputs }) => {
+      setAudioInputs(inputs);
+      setAudioOutputs(outputs);
+    }).catch(() => { /* ignore */ });
+  }, [isJoined, getAudioDevices]);
+
+  // Socket: join call room for signaling
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await socketService.connect();
+        if (cancelled) return;
+        if (resolvedCallId) {
+          console.log('[ActiveCall][venter] emit call:joined', { callId: resolvedCallId, socketId: socketService.socket?.id });
+          socketService.emit('call:joined', { callId: resolvedCallId });
+        } else {
+          console.warn('[ActiveCall][venter] no resolvedCallId — NOT joining call room. session:ended will NOT be received');
+        }
+      } catch (e) {
+        console.error('[ActiveCall][venter] socket connect failed:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [resolvedCallId]);
+
+  // Listen for session:ended directly — fired by server when listener triggers session:crisis_end.
+  // Currently the server only broadcasts this for chat; the call case is handled via call:ended { crisis: true }
+  // in the global hook (which sets crisisEnded). This direct listener stays for when the server adds call support.
+  useEffect(() => {
+    const handleSessionEnded = async (data: any) => {
+      console.log('[ActiveCall][venter] RECEIVED session:ended', { data, socketId: socketService.socket?.id });
+      const callState = (store.getState() as RootState).call;
+      if (!callState.isActive) return;
+      dispatch(endCall());
+      try { await leaveChannel(); } catch { /* ignore */ }
+      setShowCrisisOverlay(true);
+    };
+    socketService.on('session:ended', handleSessionEnded);
+    return () => socketService.off('session:ended', handleSessionEnded);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Watch crisisEnded flag — set by useGlobalSessionEvents when call:ended { crisis: true } arrives.
+  // This is the working path until server supports session:crisis_end with callId.
+  const crisisEnded = useSelector((s: RootState) => s.call.crisisEnded);
+  useEffect(() => {
+    // Reset stale flag on mount so a new call doesn't inherit a previous crisis state
+    dispatch(setCrisisEnded(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (crisisEnded) {
+      console.log('[ActiveCall][venter] crisisEnded flag set → showing overlay');
+      setShowCrisisOverlay(true);
+    }
+  }, [crisisEnded]);
+
+  const formatDuration = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleEndCall = async () => {
+    setShowEndModal(false);
+    // Dispatch immediately so the global call:ended handler skips this event
+    dispatch(endCall());
+    await leaveChannel();
+    try {
+      if (resolvedCallId) {
+        await apiInstance.post(`calls/${resolvedCallId}/end`);
+      }
+    } catch { /* ignore */ }
+    const firstStep = role === 'listener' ? 'feedback' : 'rating';
+    navigate(`/${role}/session/${feedbackSessionId}/${firstStep}`, { replace: true, state: { type: 'call' } });
+  };
+
+  const handleCrisis988 = async (mode: 'call' | 'text') => {
+    setShowCrisisOverlay(false);
+    // If call still active, end it. Otherwise it was already ended by session:ended handler.
+    if ((store.getState() as RootState).call.isActive) {
+      dispatch(endCall());
+      await leaveChannel();
+      try {
+        if (resolvedCallId) await apiInstance.post(`calls/${resolvedCallId}/end`);
+      } catch { /* ignore */ }
+    }
+    window.location.href = mode === 'call' ? 'tel:988' : 'sms:988';
+    setTimeout(() => navigate('/venter/home', { replace: true }), 1000);
+  };
+
+  const handleCrisisImSafe = () => {
+    setShowCrisisOverlay(false);
+    // If call already ended (listener triggered crisis), go home; otherwise stay on call
+    if (!(store.getState() as RootState).call.isActive) {
+      navigate('/venter/home', { replace: true });
+    }
+  };
+
+  return (
+    <div className="min-h-[100dvh] flex flex-col items-center justify-between px-5 pt-12 pb-10 relative">
+
+      {/* Center — icon + title + status */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 w-full border-b border-white/10 pb-8">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
+            <Phone size={36} className="text-white" />
+          </div>
+          {callStatus === 'connected' && (
+            <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping" />
+          )}
+        </div>
+
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-white mb-1">
+            {callStatus === 'connecting'
+              ? t('ActiveCall.connecting', 'Connecting...')
+              : t('ActiveCall.outgoingCall', 'Outgoing Call')}
+          </h2>
+          <p className="text-sm text-white/60">
+            {t('ActiveCall.subtitle', 'You are on a call with a listener')}
+          </p>
+          {callStatus === 'connected' && (
+            <p className="text-base text-white/80 mt-2 font-medium tabular-nums">
+              {formatDuration(duration)}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom controls card */}
+      <GlassCard className="w-full max-w-sm mt-8" rounded="2xl" padding="lg">
+        {/* Mute + Speaker + End row */}
+        <div className="flex justify-around items-center mb-6">
+          {/* Mute */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => dispatch(setMuted(!muted))}
+                className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-white/20"
+              >
+                {muted ? <MicOff size={22} className="text-white" /> : <Mic size={22} className="text-white" />}
+              </button>
+              {!isMobileWebView && <DevicePickerButton devices={audioInputs} onSelect={(id) => void setMicDevice(id)} label="Microphone" activeDeviceId={activeMicId} />}
+            </div>
+            <span className="text-xs text-white font-medium">
+              {muted ? t('ActiveCall.muted', 'Muted') : t('ActiveCall.mute', 'Mute')}
+            </span>
+          </div>
+
+          {/* Speaker */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => dispatch(setSpeakerRedux(!speakerOn))}
+                className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-white/20"
+              >
+                {speakerOn ? <Volume2 size={22} className="text-white" /> : <VolumeX size={22} className="text-white" />}
+              </button>
+              {!isMobileWebView && <DevicePickerButton devices={audioOutputs} onSelect={(id) => void setOutputDevice(id)} label="Speaker" activeDeviceId={activeOutputId} />}
+            </div>
+            <span className="text-xs text-white font-medium">
+              {speakerOn ? t('ActiveCall.speaker', 'Speaker') : t('ActiveCall.speakerOff', 'Speaker Off')}
+            </span>
+          </div>
+
+          {/* End */}
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => setShowEndModal(true)}
+              className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-white/20"
+            >
+              <Phone size={22} className="text-white rotate-[135deg]" />
+            </button>
+            <span className="text-xs text-white font-medium">{t('ActiveCall.end', 'End')}</span>
+          </div>
+        </div>
+
+        {/* Crisis button — venter only */}
+        {role === 'venter' && (
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => setShowCrisisOverlay(true)}
+              className="w-14 h-14 rounded-full bg-primary flex items-center justify-center transition-all hover:opacity-90"
+            >
+              <AlertTriangle size={22} className="text-white" />
+            </button>
+            <span className="text-xs text-white font-medium">{t('ActiveCall.crisis', 'Crisis')}</span>
+          </div>
+        )}
+      </GlassCard>
+
+      {/* Crisis instant-help overlay */}
+      {showCrisisOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="glass w-full max-w-sm rounded-3xl p-8 text-center border border-white/10">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle size={30} className="text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">
+              {t('Crisis.venterOverlayTitle', 'Ventally is not a crisis service.')}
+            </h3>
+            <p className="text-sm text-white/70 leading-relaxed mb-8">
+              {t('Crisis.venterOverlayMessage', 'If you are thinking about self harm, suicide, or feel unsafe, please contact 988 or emergency services now.')}
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => void handleCrisis988('call')}
+                className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+              >
+                <PhoneCall size={20} />
+                {t('Crisis.call988Now', 'CALL 988 NOW')}
+              </button>
+              <button
+                onClick={() => void handleCrisis988('text')}
+                className="w-full py-4 rounded-2xl border border-white/20 text-white font-semibold text-base flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
+              >
+                <MessageSquare size={20} />
+                {t('Crisis.text988', 'TEXT 988')}
+              </button>
+              <button
+                onClick={handleCrisisImSafe}
+                className="w-full py-3 text-white/50 text-sm hover:text-white/80 transition-colors"
+              >
+                {t('Crisis.imSafeReturn', "I'm Safe - Return to Ventally")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End session confirmation modal */}
+      {showEndModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
+          <GlassCard className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 text-center">
+            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6 sm:hidden" />
+            <h3 className="text-lg font-bold text-white mb-2">{t('VenterChat.endSessionTitle', 'End Session?')}</h3>
+            <p className="text-sm text-white/70 mb-8">{t('VenterChat.endSessionMessage', 'Are you sure you want to end this session?')}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEndModal(false)}
+                className="flex-1 py-3 rounded-2xl glass text-white font-medium text-sm hover:bg-white/10 transition-colors"
+              >
+                {t('VenterChat.endSessionNo', 'No')}
+              </button>
+              <button
+                onClick={handleEndCall}
+                className="flex-1 py-3 rounded-2xl bg-primary text-white font-medium text-sm hover:opacity-90 transition-colors"
+              >
+                {t('VenterChat.endSessionYes', 'Yes, End')}
+              </button>
+            </div>
+          </GlassCard>
+        </div>
+      )}
+    </div>
+  );
+};
