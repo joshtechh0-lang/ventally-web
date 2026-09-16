@@ -75,8 +75,7 @@ export const VenterAddFunds = () => {
 
     const handleCheckoutComplete = () => {
         setClientSecret(null);
-        toastSuccess('Top up successful!');
-        navigate(sessionType ? '/venter/finding-listener' : '/venter/wallet', { replace: true });
+        navigate('/venter/wallet/payment-success', { replace: true });
     };
 
     const getIcon = (icon: string) => {

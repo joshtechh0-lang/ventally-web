@@ -7,6 +7,7 @@ import { VenterRecoveryDetails } from '../pages/Venter/VenterRecoveryDetails';
 import { VenterDashboard } from '../pages/Venter/VenterDashboard';
 import { VenterWallet } from '../pages/Venter/VenterWallet';
 import { VenterAddFunds } from '../pages/Venter/VenterAddFunds';
+import { PaymentSuccessScreen } from '../pages/Venter/PaymentSuccessScreen';
 import { VenterTransactions } from '../pages/Venter/VenterTransactions';
 import { VenterMoodLog } from '../pages/Venter/VenterMoodLog';
 import { VenterMoods } from '../pages/Venter/VenterMoods';
@@ -94,6 +95,7 @@ export const VenterRouter = () => {
         <Route path="home" element={<VenterDashboard />} />
         <Route path="wallet" element={<VenterWallet />} />
         <Route path="wallet/add-funds" element={<VenterAddFunds />} />
+        <Route path="wallet/payment-success" element={<PaymentSuccessScreen />} />
         <Route path="wallet/transactions" element={<VenterTransactions />} />
         <Route path="mood" element={<VenterMoods />} />
         <Route path="mood/log" element={<VenterMoodLog />} />
