@@ -63,9 +63,11 @@ export const AffiliateScreen = () => {
     if (!form.name || !form.email) return toastError('Name and email are required');
     setApplying(true);
     try {
-      await apiInstance.post('support/ticket', {
-        subject: 'Affiliate Program Application',
-        message: `Name: ${form.name}\nEmail: ${form.email}\nWebsite/Social: ${form.website}\nReason: ${form.reason}`,
+      await apiInstance.post('affiliates/application', {
+        name: form.name,
+        email: form.email,
+        website: form.website,
+        reason: form.reason,
       });
       setApplied(true);
       toastSuccess('Application submitted! We will review and get back to you.');
