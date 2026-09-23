@@ -21,6 +21,7 @@ export const SignUpWeb = () => {
     password: '',
     nickname: '',
     userType: '' as 'venter' | 'listener' | '',
+    referralCode: '',
   });
   const [errors, setErrors] = useState<any>({});
   const [passwordChecks, setPasswordChecks] = useState({
@@ -77,6 +78,7 @@ export const SignUpWeb = () => {
         password: form.password,
         userType: form.userType,
         displayName: form.nickname.trim() || undefined,
+        referralCode: form.referralCode.trim() || undefined,
       });
 
       const data = res.data || res;
@@ -98,6 +100,15 @@ export const SignUpWeb = () => {
           await apiInstance.post('payments/activate-free-tier');
         } catch {
           // Silent fail — user can still sign up even if free tier activation fails
+        }
+      }
+
+      // Apply referral code if provided
+      if (form.referralCode.trim()) {
+        try {
+          await apiInstance.post('referrals/apply', { referralCode: form.referralCode.trim() });
+        } catch {
+          // Silent fail — referral is a bonus, not critical
         }
       }
 
@@ -190,6 +201,13 @@ export const SignUpWeb = () => {
             value={form.nickname}
             onChange={e => update('nickname', e.target.value.slice(0, 20))}
             hint={`${form.nickname.length}/20 — this is how others will see you`}
+          />
+          <Input
+            label="Referral Code (optional)"
+            placeholder="Enter referral code"
+            value={form.referralCode}
+            onChange={e => update('referralCode', e.target.value.toUpperCase().slice(0, 8))}
+            hint="Have a referral code? Enter it to get 5 free minutes!"
           />
           <Input
             label={t('SignUp.password', 'Password')}
