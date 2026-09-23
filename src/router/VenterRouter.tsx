@@ -47,6 +47,7 @@ import { VenterOthers } from '../pages/Venter/VenterOthers';
 
 // Common Pages
 import { ProfileScreen } from '../pages/Common/ProfileScreen';
+import { ReferralScreen } from '../pages/Common/ReferralScreen';
 import { EditProfile } from '../pages/Common/EditProfile';
 import { SessionsHistory } from '../pages/Common/SessionsHistory';
 import { SecuritySettings } from '../pages/Common/SecuritySettings';
@@ -143,6 +144,7 @@ export const VenterRouter = () => {
         <Route path="change-account/verification"      element={<ListenerVerification />} />
         {/* Common */}
         <Route path="profile" element={<ProfileScreen />} />
+        <Route path="referral" element={<ReferralScreen />} />
         <Route path="profile/edit" element={<EditProfile />} />
         <Route path="sessions" element={<SessionsHistory />} />
         <Route path="security" element={<SecuritySettings />} />

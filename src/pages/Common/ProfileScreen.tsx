@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { logout } from '../../store/slices/userSlice';
 import type { RootState } from '../../store/store';
-import {
+import { Gift,
   User, ChevronRight, LogOut, Trash2, CreditCard,
   Globe, Clock, FileText, Shield, Wallet
 } from 'lucide-react';
@@ -54,6 +54,13 @@ export const ProfileScreen = () => {
       label: t('VenterSettings.options.language.title', 'Language'),
       icon: Globe,
       path: `${basePath}/language`,
+    },
+    // Refer & Earn — always present
+    {
+      id: 'referral',
+      label: 'Refer & Earn',
+      icon: Gift,
+      path: `${basePath}/referral`,
     },
     // Choose Plan — Venter only
     ...(isVenter ? [{
