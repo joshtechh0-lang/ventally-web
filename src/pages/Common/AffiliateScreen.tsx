@@ -14,6 +14,9 @@ export const AffiliateScreen = () => {
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', website: '', reason: '' });
 
   useEffect(() => {
     // Get affiliate code from user profile
@@ -56,20 +59,77 @@ export const AffiliateScreen = () => {
     }
   };
 
+  const handleApply = async () => {
+    if (!form.name || !form.email) return toastError('Name and email are required');
+    setApplying(true);
+    try {
+      await apiInstance.post('support/ticket', {
+        subject: 'Affiliate Program Application',
+        message: `Name: ${form.name}\nEmail: ${form.email}\nWebsite/Social: ${form.website}\nReason: ${form.reason}`,
+      });
+      setApplied(true);
+      toastSuccess('Application submitted! We will review and get back to you.');
+    } catch {
+      toastError('Failed to submit. Please try again.');
+    } finally {
+      setApplying(false);
+    }
+  };
+
   if (!loading && !code) {
     return (
       <div className="page-wrapper page-wrapper--wide animate-fade-in">
         <PageHeader title="Affiliate Program" onBack={() => navigate(-1)} />
-        <GlassCard bordered padding="lg" className="text-center">
-          <Link2 size={40} className="text-primary mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Become an Affiliate</h2>
-          <p className="text-white/60 text-sm mb-6">
-            Earn commissions by referring new users to Ventally. Contact us to join the affiliate program.
-          </p>
-          <Button variant="primary" onClick={() => window.open('mailto:support@ventally.app?subject=Affiliate Program', '_blank')}>
-            Apply Now
-          </Button>
-        </GlassCard>
+        {applied ? (
+          <GlassCard bordered padding="lg" className="text-center">
+            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+              <Check size={32} className="text-green-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Application Submitted!</h2>
+            <p className="text-white/60 text-sm">We will review your application and get back to you within 2-3 business days.</p>
+          </GlassCard>
+        ) : (
+          <GlassCard bordered padding="lg">
+            <div className="text-center mb-6">
+              <Link2 size={40} className="text-primary mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-white mb-2">Become an Affiliate</h2>
+              <p className="text-white/60 text-sm">Earn commissions by referring new users to Ventally.</p>
+            </div>
+            <div className="space-y-4 mb-6">
+              <Input
+                label="Full Name"
+                placeholder="Your name"
+                value={form.name}
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              />
+              <Input
+                label="Email"
+                placeholder="your@email.com"
+                value={form.email}
+                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+              />
+              <Input
+                label="Website or Social Media (optional)"
+                placeholder="https://yourwebsite.com"
+                value={form.website}
+                onChange={e => setForm(p => ({ ...p, website: e.target.value }))}
+              />
+              <div>
+                <label className="block text-sm text-white/70 mb-2">Why do you want to be an affiliate?</label>
+                <textarea
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary resize-none"
+                  rows={4}
+                  placeholder="Tell us about your audience and how you plan to promote Ventally..."
+                  value={form.reason}
+                  onChange={e => setForm(p => ({ ...p, reason: e.target.value }))}
+                />
+              </div>
+            </div>
+            <Button variant="primary" fullWidth loading={applying} onClick={handleApply}>
+              Submit Application
+            </Button>
+          </GlassCard>
+        )}
       </div>
     );
   }
