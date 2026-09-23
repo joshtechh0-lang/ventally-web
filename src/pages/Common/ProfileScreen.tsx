@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { logout } from '../../store/slices/userSlice';
 import type { RootState } from '../../store/store';
-import { Gift,
+import { Gift, Link2,
   User, ChevronRight, LogOut, Trash2, CreditCard,
   Globe, Clock, FileText, Shield, Wallet
 } from 'lucide-react';
@@ -61,6 +61,13 @@ export const ProfileScreen = () => {
       label: 'Refer & Earn',
       icon: Gift,
       path: `${basePath}/referral`,
+    },
+    // Affiliate Program — always present
+    {
+      id: 'affiliate',
+      label: 'Affiliate Program',
+      icon: Link2,
+      path: `${basePath}/affiliate`,
     },
     // Choose Plan — Venter only
     ...(isVenter ? [{
