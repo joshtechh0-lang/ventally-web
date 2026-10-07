@@ -25,21 +25,14 @@ export const ListenerRequests = () => {
   // Get requests from Redux store (populated by socket)
   const requests = useSelector((state: RootState) => state.listener.requests);
 
-  // On mount: ask the server for the latest open requests via socket,
-  // then fall back to the REST endpoint for the venter's pending call.
+  // On mount: ask the server for the latest open requests via socket.
   // This handles the case where a listener opens the page fresh from an
   // SMS/email link before the socket fires "requests:latest".
   useEffect(() => {
-    // Ask the server to push the latest open requests to this listener.
-    // The server listens for "requests:get" and responds with "requests:latest".
-    socketService.emit('requests:get');
+    let cancelled = false;
 
-    // Give the socket a couple of seconds to hydrate the store.
-    // After that, stop showing the spinner regardless.
-    const timer = setTimeout(() => setIsLoading(false), 2500);
-
-    // Also listen for requests:latest in case it fires after mount
     const handleLatest = (data: any) => {
+      if (cancelled) return;
       const mapped = (data?.requests ?? []).map((item: any) => ({
         id: item.requestId ?? item.id,
         type: (item.requestType === 'call' ? 'call' : 'message') as 'call' | 'message',
@@ -55,11 +48,28 @@ export const ListenerRequests = () => {
       }
       setIsLoading(false);
     };
+
+    // Register listener before emitting so we never miss the response.
     socketService.on('requests:latest', handleLatest);
 
+    // Ask the server for open requests. If the socket is not yet connected,
+    // socketService.emit() will connect first then emit automatically.
+    socketService.emit('requests:get');
+
+    // Also re-emit once the socket connects (handles cold-start race).
+    const handleConnect = () => {
+      if (!cancelled) socketService.emit('requests:get');
+    };
+    socketService.on('connect', handleConnect);
+
+    // Fall-back: hide spinner after 8 s even if server never responds.
+    const timer = setTimeout(() => { if (!cancelled) setIsLoading(false); }, 8000);
+
     return () => {
+      cancelled = true;
       clearTimeout(timer);
       socketService.off('requests:latest', handleLatest);
+      socketService.off('connect', handleConnect);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
