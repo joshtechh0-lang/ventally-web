@@ -1,26 +1,68 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { removeRequest } from '../../store/slices/listenerSlice';
+import { removeRequest, setRequests } from '../../store/slices/listenerSlice';
 import { sessionStarted, chatSessionStarted } from '../../store/slices/callSlice';
 import { setSessionInfo } from '../../store/slices/sessionSlice';
 import type { RootState } from '../../store/store';
 import apiInstance from '../../api/apiInstance';
 import { toastError } from '../../utils/toast';
 import { useMicPermission } from '../../hooks/useMicPermission';
-import { Phone, MessageSquare, User } from 'lucide-react';
+import { Phone, MessageSquare, User, Loader2 } from 'lucide-react';
+import socketService from '../../api/socketService';
 
 export const ListenerRequests = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(true);
   // Get requests from Redux store (populated by socket)
   const requests = useSelector((state: RootState) => state.listener.requests);
+
+  // On mount: ask the server for the latest open requests via socket,
+  // then fall back to the REST endpoint for the venter's pending call.
+  // This handles the case where a listener opens the page fresh from an
+  // SMS/email link before the socket fires "requests:latest".
+  useEffect(() => {
+    // Ask the server to push the latest open requests to this listener.
+    // The server listens for "requests:get" and responds with "requests:latest".
+    socketService.emit('requests:get');
+
+    // Give the socket a couple of seconds to hydrate the store.
+    // After that, stop showing the spinner regardless.
+    const timer = setTimeout(() => setIsLoading(false), 2500);
+
+    // Also listen for requests:latest in case it fires after mount
+    const handleLatest = (data: any) => {
+      const mapped = (data?.requests ?? []).map((item: any) => ({
+        id: item.requestId ?? item.id,
+        type: (item.requestType === 'call' ? 'call' : 'message') as 'call' | 'message',
+        title: item.requester?.anonymousName ?? item.title ?? 'Anonymous',
+        requestType: item.requestType ?? null,
+        requestId: item.requestId ?? null,
+        venterId: item.requester?.id ?? item.venterId ?? null,
+        listenerId: item.listenerId ?? null,
+        ratePerMinute: item.ratePerMinute ?? null,
+      }));
+      if (mapped.length > 0) {
+        dispatch(setRequests(mapped));
+      }
+      setIsLoading(false);
+    };
+    socketService.on('requests:latest', handleLatest);
+
+    return () => {
+      clearTimeout(timer);
+      socketService.off('requests:latest', handleLatest);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { ensureMicPermission, MicPermissionModal } = useMicPermission();
 
@@ -108,7 +150,12 @@ export const ListenerRequests = () => {
     <div className="page-wrapper page-wrapper--wide animate-fade-in">
       <PageHeader title={t('ListenerHome.incomingRequests', 'Incoming Requests')} subtitle={t('ListenerRequests.subtitle', 'Accept or decline venter connection requests')} />
 
-      {requests.length === 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <Loader2 size={32} className="animate-spin text-white/60" />
+          <p className="text-sm text-white/60">{t('ListenerRequests.checking', 'Checking for requests…')}</p>
+        </div>
+      ) : requests.length === 0 ? (
         <EmptyState
           title={t('ListenerHome.noRequests', 'No pending requests')}
           description={t('ListenerHome.noRequestsDesc', 'New requests will appear here when venters seek support.')}
