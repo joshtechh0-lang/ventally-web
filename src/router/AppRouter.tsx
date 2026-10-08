@@ -175,8 +175,16 @@ const AppRouter = () => {
           <Route path="*" element={<Navigate to={getRoleHome()} replace />} />
         </>
       ) : (
-        /* Unauthenticated — catch-all sends to onboarding */
-        <Route path="*" element={<Navigate to="/onboarding" replace />} />
+        /* Unauthenticated — deep links (e.g. /listener/requests?requestId=...) go to
+           login with returnTo so the user lands back at the right page after auth. */
+        <Route path="*" element={(() => {
+          const fullPath = window.location.pathname + window.location.search;
+          const isDeepLink = fullPath.includes('requestId=') || fullPath.includes('returnTo=');
+          if (isDeepLink && fullPath.startsWith('/listener')) {
+            return <Navigate to={`/login?returnTo=${encodeURIComponent(fullPath)}`} replace />;
+          }
+          return <Navigate to="/onboarding" replace />;
+        })()} />
       )}
           <Route path="/mobile-call" element={<ListenerActiveCall />} />
           <Route path="/standalone-call" element={<StandaloneCall />} />

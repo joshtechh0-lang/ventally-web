@@ -84,11 +84,11 @@ export const ListenerLayout = ({ children }: ListenerLayoutProps) => {
         await socketService.connect();
         console.log('[ListenerLayout] Socket connected');
 
-        // Listen for incoming requests
+        // Listen for incoming requests — only update store if socket returns data
         socketService.on('requests:latest', (data: any) => {
           console.log('[Socket] requests:latest:', data);
-          const requests = data?.requests?.map((item: any) => ({
-            id: item.requestId,
+          const requests = (data?.requests ?? []).map((item: any) => ({
+            id: item.requestId ?? item.id,
             type: item.requestType === 'call' ? 'call' : 'message',
             title: item.requester?.anonymousName ?? 'Anonymous',
             requestType: item.requestType ?? null,
@@ -97,7 +97,9 @@ export const ListenerLayout = ({ children }: ListenerLayoutProps) => {
             listenerId: item.listenerId ?? null,
             ratePerMinute: item.ratePerMinute ?? null,
           }));
-          dispatch(setRequests(requests));
+          // Only dispatch if socket actually returned requests; don't clear
+          // a deep-link-fetched request with an empty socket response.
+          if (requests.length > 0) dispatch(setRequests(requests));
         });
 
         const handleNewRequest = (data: any) => {
