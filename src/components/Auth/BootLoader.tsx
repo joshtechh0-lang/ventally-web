@@ -43,9 +43,12 @@ export const BootLoader: React.FC<BootLoaderProps> = ({ children }) => {
           const currentPath = location.pathname;
           const isAuthPath = currentPath === '/' || currentPath === '/onboarding' || currentPath.startsWith('/login') || currentPath.startsWith('/signup');
           
+          // Paths that are valid deep-link destinations — don't redirect away from these
+          const isDeepLinkPath = currentPath.includes('/incoming') || currentPath.includes('/call/');
+
           if (isAuthPath) {
             navigateToNextStep(userData, currentPath);
-          } else {
+          } else if (!isDeepLinkPath) {
             // Check if current path is allowed for current state
             const targetStep = getNextStep(userData, currentPath);
             if (targetStep && targetStep !== currentPath && !currentPath.startsWith(targetStep)) {
