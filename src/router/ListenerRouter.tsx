@@ -6,6 +6,7 @@ import { Appeal } from '../pages/Common/Appeal';
 // Listener Pages
 import { ListenerDashboard } from '../pages/Listener/ListenerDashboard';
 import { ListenerRequests } from '../pages/Listener/ListenerRequests';
+import { IncomingRequestScreen } from '../pages/Listener/IncomingRequestScreen';
 import { ListenerWallet } from '../pages/Listener/ListenerWallet';
 import { ListenerSettings } from '../pages/Listener/ListenerSettings';
 
@@ -65,6 +66,7 @@ export const ListenerRouter = () => {
         <Route index element={<Navigate to="home" replace />} />
         <Route path="home" element={<ListenerDashboard />} />
         <Route path="requests" element={<ListenerRequests />} />
+        <Route path="incoming" element={<IncomingRequestScreen />} />
         <Route path="wallet" element={<ListenerWallet />} />
         <Route path="settings" element={<ListenerSettings />} />
         <Route path="call/:roomId" element={<ListenerActiveCall />} />
