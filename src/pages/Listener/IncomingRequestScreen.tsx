@@ -35,7 +35,7 @@ export const IncomingRequestScreen = () => {
 
     const fetchRequest = async () => {
       try {
-        const endpoint = requestType === 'chat' ? `chat/${requestId}` : `calls/${requestId}`;
+        const endpoint = requestType === 'chat' ? `conversations/${requestId}` : `calls/${requestId}`;
         const res = await apiInstance.get(endpoint);
         const data = res.data?.call ?? res.data?.conversation ?? res.data;
 
