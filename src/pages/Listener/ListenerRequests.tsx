@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
@@ -22,15 +22,52 @@ export const ListenerRequests = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
-  // Get requests from Redux store (populated by socket)
+  const [searchParams] = useSearchParams();
+  // Get requests from Redux store (populated by socket or direct fetch)
   const requests = useSelector((state: RootState) => state.listener.requests);
 
-  // On mount: ask the server for the latest open requests via socket.
-  // This handles the case where a listener opens the page fresh from an
-  // SMS/email link before the socket fires "requests:latest".
+  // On mount: if URL has ?requestId=...&type=..., fetch that specific request
+  // directly from the API (deep link from SMS/email). Otherwise fall back to
+  // socket-based hydration.
   useEffect(() => {
     let cancelled = false;
+    const requestId = searchParams.get('requestId');
+    const requestType = searchParams.get('type'); // 'call' or 'chat'
 
+    const fetchDirectRequest = async () => {
+      try {
+        const endpoint = requestType === 'chat'
+          ? `chat/${requestId}`
+          : `calls/${requestId}`;
+        const res = await apiInstance.get(endpoint);
+        if (cancelled) return;
+        const data = res.data?.call ?? res.data?.conversation ?? res.data;
+        if (data && (data.status === 'requesting' || data.status === 'pending')) {
+          dispatch(setRequests([{
+            id: requestId!,
+            type: requestType === 'chat' ? 'message' : 'call',
+            title: data.requester?.anonymousName ?? data.venter?.anonymousName ?? 'Anonymous',
+            requestType: requestType === 'chat' ? 'chat' : 'call',
+            requestId: requestId,
+            venterId: data.venterId ?? data.venter?.id ?? null,
+            listenerId: data.listenerId ?? data.listener?.id ?? null,
+            ratePerMinute: data.ratePerMinute ?? null,
+          }]));
+        }
+      } catch (e) {
+        console.warn('[ListenerRequests] direct fetch failed:', e);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    if (requestId) {
+      // Deep link from SMS/email — fetch the specific request immediately
+      fetchDirectRequest();
+      return () => { cancelled = true; };
+    }
+
+    // No deep link — fall back to socket-based hydration
     const handleLatest = (data: any) => {
       if (cancelled) return;
       const mapped = (data?.requests ?? []).map((item: any) => ({
@@ -43,26 +80,16 @@ export const ListenerRequests = () => {
         listenerId: item.listenerId ?? null,
         ratePerMinute: item.ratePerMinute ?? null,
       }));
-      if (mapped.length > 0) {
-        dispatch(setRequests(mapped));
-      }
+      if (mapped.length > 0) dispatch(setRequests(mapped));
       setIsLoading(false);
     };
 
-    // Register listener before emitting so we never miss the response.
     socketService.on('requests:latest', handleLatest);
-
-    // Ask the server for open requests. If the socket is not yet connected,
-    // socketService.emit() will connect first then emit automatically.
     socketService.emit('requests:get');
 
-    // Also re-emit once the socket connects (handles cold-start race).
-    const handleConnect = () => {
-      if (!cancelled) socketService.emit('requests:get');
-    };
+    const handleConnect = () => { if (!cancelled) socketService.emit('requests:get'); };
     socketService.on('connect', handleConnect);
 
-    // Fall-back: hide spinner after 8 s even if server never responds.
     const timer = setTimeout(() => { if (!cancelled) setIsLoading(false); }, 8000);
 
     return () => {
