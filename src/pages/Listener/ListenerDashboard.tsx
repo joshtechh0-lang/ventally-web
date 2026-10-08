@@ -237,7 +237,7 @@ export const ListenerDashboard = () => {
             {requests.length > 0 && (
               <button
                 type="button"
-                onClick={() => navigate('/listener/requests')}
+                onClick={() => navigate('/listener/requests')} // view all requests list
                 className="text-xs text-white/80 hover:text-white transition-colors flex items-center gap-1"
               >
                 {t('Common.viewAll', 'View All')} <ChevronRight size={12} />
@@ -270,7 +270,7 @@ export const ListenerDashboard = () => {
                     index === 0 && 'rounded-t-2xl',
                     index === requests.length - 1 && 'rounded-b-2xl border-b-0'
                   )}
-                  onClick={() => navigate('/listener/requests')}
+                  onClick={() => navigate(`/listener/incoming?requestId=${item.requestId ?? item.id}&type=${item.requestType === 'call' ? 'call' : 'chat'}`)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-2xl glass-accent flex items-center justify-center text-accent flex-shrink-0">

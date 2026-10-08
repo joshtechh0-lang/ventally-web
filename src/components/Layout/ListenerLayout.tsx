@@ -104,16 +104,22 @@ export const ListenerLayout = ({ children }: ListenerLayoutProps) => {
 
         const handleNewRequest = (data: any) => {
           console.log('[Socket] new request:', data);
+          const requestId = data.requestId ?? data.id ?? null;
+          const requestType = data.requestType === 'call' ? 'call' : 'chat';
           dispatch(setRequests([{
-            id: data.requestId ?? data.id,
-            type: data.requestType === 'call' ? 'call' : 'message',
+            id: requestId,
+            type: requestType === 'call' ? 'call' : 'message',
             title: data.requester?.anonymousName ?? 'Anonymous',
             requestType: data.requestType ?? null,
-            requestId: data.requestId ?? data.id ?? null,
+            requestId,
             venterId: data.requester?.id ?? data.venterId ?? null,
             listenerId: data.listenerId ?? null,
             ratePerMinute: data.ratePerMinute ?? null,
           }]));
+          // Navigate directly to the incoming request screen
+          if (requestId) {
+            navigate(`/listener/incoming?requestId=${requestId}&type=${requestType}`);
+          }
         };
         socketService.on('call:request', handleNewRequest);
         socketService.on('chat:request', handleNewRequest);
