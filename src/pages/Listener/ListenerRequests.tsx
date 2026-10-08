@@ -223,7 +223,7 @@ export const ListenerRequests = () => {
                   fullWidth
                   onClick={() => handleDecline(req)}
                 >
-                  {t('Common.decline', 'Cancel')}
+                  {t('Common.decline', 'Decline')}
                 </Button>
                 <Button
                   variant="primary"
@@ -231,7 +231,7 @@ export const ListenerRequests = () => {
                   fullWidth
                   onClick={() => handleAccept(req)}
                 >
-                  {t('Common.accept', 'Begin Session')}
+                  {t('Common.accept', 'Accept')}
                 </Button>
               </div>
             </GlassCard>
