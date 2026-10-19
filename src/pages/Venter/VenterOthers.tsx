@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Shield, Users } from 'lucide-react';
 import { GlassCard } from '../../components/ui/GlassCard';
 
 // PNG icons matching the RN app
@@ -35,6 +35,19 @@ const OPTIONS = [
     titleKey: 'VenterOthers.options.profile.title',
     icon: userIcon,
     path: '/venter/profile',
+  },
+];
+
+const ICON_OPTIONS = [
+  {
+    title: 'Referrals',
+    Icon: Users,
+    path: '/venter/referral',
+  },
+  {
+    title: 'Community Discount',
+    Icon: Shield,
+    path: '/venter/community-discount',
   },
 ];
 
@@ -76,6 +89,29 @@ export const VenterOthers = () => {
             </div>
           </GlassCard>
         ))}
+
+        {/* Lucide-icon items: Referrals & Community Discount */}
+        {ICON_OPTIONS.map(opt => {
+          const Icon = opt.Icon;
+          return (
+            <GlassCard
+              key={opt.path}
+              bordered
+              hover
+              onClick={() => navigate(opt.path)}
+              className="cursor-pointer"
+              style={{ background: 'rgba(0,0,0,0.1)' }}
+            >
+              <div className="flex items-center gap-4 py-1">
+                <div className="w-10 h-10 glass rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <Icon size={20} className="text-white" style={{ opacity: 0.9 }} />
+                </div>
+                <p className="flex-1 text-sm font-medium text-white">{opt.title}</p>
+                <ChevronRight size={18} className="text-white flex-shrink-0" />
+              </div>
+            </GlassCard>
+          );
+        })}
       </div>
     </div>
   );
