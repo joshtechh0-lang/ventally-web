@@ -28,6 +28,7 @@ import { AdminSubAdminProfile } from '../pages/Admin/AdminSubAdminProfile';
 import { AdminSuccessScreen } from '../pages/Admin/AdminSuccessScreen';
 import { AdminSecurity } from '../pages/Admin/AdminSecurity';
 import { AdminAISettings } from '../pages/Admin/AdminAISettings';
+import { AdminDiscounts } from '../pages/Admin/AdminDiscounts';
 
 // Common Pages
 import { Notifications } from '../pages/Common/Notifications';
@@ -68,6 +69,7 @@ export const AdminRouter = () => {
         <Route path="security" element={<AdminSecurity />} />
         <Route path="security-success" element={<AdminSuccessScreen />} />
         <Route path="ai-settings" element={<AdminAISettings />} />
+        <Route path="discounts" element={<AdminDiscounts />} />
         {/* Common */}
         <Route path="notifications" element={<Notifications />} />
         <Route path="notifications/:id" element={<NotificationDetail />} />

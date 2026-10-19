@@ -81,6 +81,10 @@ export const AdminSettings = () => {
           title={t('Admin.settings.options.aiSettings')}
           onPress={() => navigate('/admin/ai-settings')}
         />
+        <SettingsItem
+          title="Discounts"
+          onPress={() => navigate('/admin/discounts')}
+        />
         
         {/* Remove bottom border for the last item in the list visually by targeting pseudo or inline, though border-b won't break layout */}
         <SettingsItem
