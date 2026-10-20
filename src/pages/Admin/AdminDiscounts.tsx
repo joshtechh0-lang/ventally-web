@@ -69,8 +69,8 @@ function sourceLabel(s: string) {
   return { manual: 'Manual', stripe: 'Stripe', verifypass: 'VerifyPass', referral: 'Referral' }[s] ?? s;
 }
 
-function sourceVariant(s: string): 'primary' | 'success' | 'warning' | 'info' {
-  return ({ manual: 'primary', stripe: 'success', verifypass: 'warning', referral: 'info' } as any)[s] ?? 'primary';
+function sourceVariant(s: string): 'primary' | 'success' | 'warning' | 'accent' {
+  return ({ manual: 'primary', stripe: 'success', verifypass: 'warning', referral: 'accent' } as any)[s] ?? 'primary';
 }
 
 function eligibilityLabel(e: string, ct: string | null) {
