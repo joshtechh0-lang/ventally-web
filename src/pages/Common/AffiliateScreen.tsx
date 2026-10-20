@@ -172,7 +172,7 @@ export const AffiliateScreen = () => {
           <Button variant="primary" fullWidth leftIcon={<Copy size={16} />} onClick={handleCopy}>
             Copy Link
           </Button>
-          <Button variant="glass" fullWidth leftIcon={<Share2 size={16} />} onClick={handleShare}>
+          <Button variant="glass-bordered" fullWidth leftIcon={<Share2 size={16} />} onClick={handleShare}>
             Share
           </Button>
         </div>

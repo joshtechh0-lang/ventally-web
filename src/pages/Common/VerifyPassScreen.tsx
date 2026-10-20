@@ -241,7 +241,7 @@ export const VerifyPassScreen = () => {
 
       {/* ── CTA ── */}
       {isVerified ? (
-        <Button variant="glass" fullWidth onClick={() => navigate(-1)}>
+        <Button variant="glass-bordered" fullWidth onClick={() => navigate(-1)}>
           Done
         </Button>
       ) : polling ? (
@@ -265,7 +265,7 @@ export const VerifyPassScreen = () => {
           >
             I've Completed Verification
           </Button>
-          <Button variant="glass" fullWidth onClick={() => setVerifying(false)}>
+          <Button variant="glass-bordered" fullWidth onClick={() => setVerifying(false)}>
             Cancel
           </Button>
         </GlassCard>

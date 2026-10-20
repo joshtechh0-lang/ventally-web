@@ -7,37 +7,42 @@ import { Gift, Copy, Share2, Check, Users } from 'lucide-react';
 import apiInstance from '../../api/apiInstance';
 import { toastSuccess, toastError } from '../../utils/toast';
 
+const REFERRAL_BASE_URL = 'https://ventally.app/signup?ref=';
+
 export const ReferralScreen = () => {
   const navigate = useNavigate();
-  const [referralInfo, setReferralInfo] = useState<any>(null);
+  const [referralData, setReferralData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    apiInstance.get('referrals/')
-      .then(res => setReferralInfo(res.data))
+    apiInstance.get('referrals/my-stats')
+      .then((res: any) => setReferralData(res.data?.data ?? null))
       .catch(() => toastError('Failed to load referral info'))
       .finally(() => setLoading(false));
   }, []);
 
+  const referralCode: string = referralData?.referralCode ?? '';
+  const referralLink = referralCode ? `${REFERRAL_BASE_URL}${referralCode}` : '';
+
   const handleCopy = () => {
-    if (!referralInfo?.referralCode) return;
-    navigator.clipboard.writeText(referralInfo.referralCode);
+    if (!referralCode) return;
+    navigator.clipboard.writeText(referralCode);
     setCopied(true);
     toastSuccess('Referral code copied!');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShare = () => {
-    if (!referralInfo?.referralLink) return;
+    if (!referralLink) return;
     if (navigator.share) {
       navigator.share({
         title: 'Join Ventally',
-        text: `Use my referral code ${referralInfo.referralCode} to get 5 free minutes on Ventally!`,
-        url: referralInfo.referralLink,
+        text: `Use my referral code ${referralCode} to get 5 free minutes on Ventally!`,
+        url: referralLink,
       }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(referralInfo.referralLink);
+      navigator.clipboard.writeText(referralLink);
       toastSuccess('Referral link copied!');
     }
   };
@@ -57,7 +62,8 @@ export const ReferralScreen = () => {
         </div>
         <h2 className="text-xl font-bold text-white mb-2">Invite Friends, Earn Minutes</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          Share your referral code with friends. When they sign up, you both get <strong className="text-white">5 free minutes</strong>!
+          Share your referral code with friends. When they sign up, you both get{' '}
+          <strong className="text-white">5 free minutes</strong>!
         </p>
       </GlassCard>
 
@@ -67,27 +73,43 @@ export const ReferralScreen = () => {
         {loading ? (
           <div className="skeleton h-12 rounded-xl w-full" />
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 bg-white/10 rounded-xl px-4 py-3 text-center">
-              <p className="text-2xl font-bold text-white tracking-widest">{referralInfo?.referralCode || '—'}</p>
+              <p className="text-2xl font-bold text-white tracking-widest">
+                {referralCode || '—'}
+              </p>
             </div>
             <button
               onClick={handleCopy}
-              className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors"
+              disabled={!referralCode}
+              className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors disabled:opacity-40"
             >
-              {copied ? <Check size={20} className="text-green-400" /> : <Copy size={20} className="text-primary" />}
+              {copied
+                ? <Check size={20} className="text-green-400" />
+                : <Copy size={20} className="text-primary" />}
             </button>
           </div>
         )}
-        <Button
-          variant="primary"
-          fullWidth
-          leftIcon={<Share2 size={18} />}
-          onClick={handleShare}
-          className="mt-4"
-        >
-          Share Referral Link
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            variant="primary"
+            fullWidth
+            leftIcon={<Copy size={16} />}
+            onClick={handleCopy}
+            disabled={!referralCode || loading}
+          >
+            Copy Code
+          </Button>
+          <Button
+            variant="glass-bordered"
+            fullWidth
+            leftIcon={<Share2 size={16} />}
+            onClick={handleShare}
+            disabled={!referralLink || loading}
+          >
+            Share
+          </Button>
+        </div>
       </GlassCard>
 
       {/* Stats */}
@@ -101,11 +123,11 @@ export const ReferralScreen = () => {
         ) : (
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/5 rounded-xl p-4 text-center">
-              <p className="text-3xl font-bold text-white">{referralInfo?.totalReferrals || 0}</p>
+              <p className="text-3xl font-bold text-white">{referralData?.totalReferred ?? 0}</p>
               <p className="text-xs text-white/50 mt-1">Total Referrals</p>
             </div>
             <div className="bg-white/5 rounded-xl p-4 text-center">
-              <p className="text-3xl font-bold text-white">{(referralInfo?.rewardedReferrals || 0) * (referralInfo?.rewardPerReferral || 5)}</p>
+              <p className="text-3xl font-bold text-white">{referralData?.earnedRewards ?? 0}</p>
               <p className="text-xs text-white/50 mt-1">Minutes Earned</p>
             </div>
           </div>
