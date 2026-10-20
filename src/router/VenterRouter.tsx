@@ -60,6 +60,7 @@ import { DeleteAccount } from '../pages/Common/DeleteAccount';
 import { Notifications } from '../pages/Common/Notifications';
 import { NotificationDetail } from '../pages/Common/NotificationDetail';
 import { UpdateEmail } from '../pages/Common/UpdateEmail';
+import { CredentialChangeOTP } from '../pages/Common/CredentialChangeOTP';
 import { PayoutSettings } from '../pages/Common/PayoutSettings';
 import { GenderIdentitySelect } from '../pages/Common/GenderIdentitySelect';
 import { RacialIdentitySelect } from '../pages/Common/RacialIdentitySelect';
@@ -154,6 +155,7 @@ export const VenterRouter = () => {
         <Route path="security" element={<SecuritySettings />} />
         <Route path="security/change-password" element={<ChangePassword />} />
         <Route path="update-email" element={<UpdateEmail />} />
+        <Route path="update-email/credential-otp" element={<CredentialChangeOTP />} />
         {/* Profile Preference Edit pages — same component as signup, auto-detected editMode */}
         <Route path="profile/preferences/:stepId" element={<VenterQuestionsFlow />} />
         {/* Profile Selector Sub-pages (legacy, kept for compatibility) */}

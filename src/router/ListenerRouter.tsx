@@ -40,6 +40,7 @@ import { ListenerNotificationsSettings } from '../pages/Listener/ListenerNotific
 import { ListenerSessionFeedback } from '../pages/Listener/ListenerSessionFeedback';
 import { ListenerSessionRating } from '../pages/Listener/ListenerSessionRating';
 import { UpdateEmail } from '../pages/Common/UpdateEmail';
+import { CredentialChangeOTP } from '../pages/Common/CredentialChangeOTP';
 import { PayoutSettings } from '../pages/Common/PayoutSettings';
 import { GenderIdentitySelect } from '../pages/Common/GenderIdentitySelect';
 import { RacialIdentitySelect } from '../pages/Common/RacialIdentitySelect';
@@ -79,6 +80,7 @@ export const ListenerRouter = () => {
         <Route path="security" element={<SecuritySettings />} />
         <Route path="security/change-password" element={<ChangePassword />} />
         <Route path="update-email" element={<UpdateEmail />} />
+        <Route path="update-email/credential-otp" element={<CredentialChangeOTP />} />
         <Route path="notifications-settings" element={<ListenerNotificationsSettings />} />
         <Route path="legal" element={<LegalPolicies />} />
         <Route path="legal/:docId" element={<LegalDocViewer />} />

@@ -11,7 +11,7 @@ import { toastSuccess, toastError } from '../../utils/toast';
 export const UpdateEmail = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { changeEmail } = useCredentialsChange();
+  const { requestEmailChangeOTP } = useCredentialsChange();
 
   const [currentEmail, setCurrentEmail] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -30,9 +30,10 @@ export const UpdateEmail = () => {
 
     setLoading(true);
     try {
-      await changeEmail(newEmail);
-      toastSuccess(t('Security.success.emailChanged'));
-      navigate(-1);
+      await requestEmailChangeOTP(newEmail);
+      toastSuccess(t('EmailVerification.otpSent', 'OTP sent to your new email'));
+      // Pass type + new value so the OTP screen can verify
+      navigate('credential-otp', { state: { type: 'email', newValue: newEmail } });
     } catch (error: any) {
       toastError(error?.error || t('Common.somethingWentWrong'));
     } finally {
@@ -47,7 +48,7 @@ export const UpdateEmail = () => {
       <GlassCard bordered>
         <div className="text-center mb-6">
           <h2 className="text-lg font-semibold text-white mb-1">{t('UpdateEmail.title')}</h2>
-          <p className="text-sm text-gray-400">{t('UpdateEmail.subtitle')}</p>
+          <p className="text-sm text-white/60">{t('UpdateEmail.subtitle')}</p>
         </div>
 
         <div className="space-y-4">
@@ -55,11 +56,13 @@ export const UpdateEmail = () => {
             placeholder={t('UpdateEmail.currentEmail')}
             value={currentEmail}
             onChange={e => setCurrentEmail(e.target.value)}
+            type="email"
           />
           <Input
             placeholder={t('UpdateEmail.newEmail')}
             value={newEmail}
             onChange={e => setNewEmail(e.target.value)}
+            type="email"
           />
         </div>
       </GlassCard>
