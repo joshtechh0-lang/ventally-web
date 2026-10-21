@@ -160,9 +160,6 @@ export const SubscriptionDetailsScreen = () => {
                 <h3 className="text-[17px] font-bold text-white mb-2">
                   {t('SubscriptionDetails.noActiveSubscription')}
                 </h3>
-                <p className="text-[15px] text-white/70 mb-8 max-w-[280px] mx-auto">
-                  {t('SubscriptionDetails.freePlanMessage')}
-                </p>
                 <Button variant="primary" fullWidth onClick={handleManage}>
                   {t('SubscriptionDetails.choosePlan')}
                 </Button>
