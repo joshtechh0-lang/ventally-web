@@ -52,8 +52,13 @@ export const useAdmin = () => {
   };
 
   /** Bulk role update */
-  const adminBulkUpdateUserRoles = async (payload: { userIds: string[]; role: string }) => {
+  const adminBulkUpdateUserRoles = async (payload: { userIds: string[]; targetRole: string }) => {
     const res = await apiInstance.put('admin/users/roles', payload);
+    return res.data;
+  };
+
+  const adminChangeUserRole = async (userId: string, targetRole: 'venter' | 'listener' | 'both') => {
+    const res = await apiInstance.put('admin/users/roles', { userIds: [userId], targetRole });
     return res.data;
   };
 
@@ -266,7 +271,7 @@ export const useAdmin = () => {
 
   return useMemo(() => ({
     getReportStats,
-    adminListUsers, getUsers, getUserDetail, adminGetUserDetail, adminSuspendUser, adminDeleteUser, adminBulkDeleteUsers, adminBulkUpdateUserRoles, toggleUserStatus,
+    adminListUsers, getUsers, getUserDetail, adminGetUserDetail, adminSuspendUser, adminDeleteUser, adminBulkDeleteUsers, adminBulkUpdateUserRoles, adminChangeUserRole, toggleUserStatus,
     getSubAdmins, createSubAdmin, addSubAdmin, getSubAdminDetail, updateSubAdminPermissions, updateSubAdmin, deleteSubAdmin, removeSubAdmin,
     getListenerRequests, getListenerVerifications, getListenerVerificationDetail, reviewListenerVerification, reviewListenerRequest,
     getReports, getReportDetail, getReportDetails, updateReportStatus, takeAction, submitReport,

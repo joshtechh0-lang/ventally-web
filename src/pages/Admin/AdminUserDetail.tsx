@@ -6,9 +6,9 @@ import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { useAdmin } from '../../api/hooks/useAdmin';
-import { 
-  User, Mail, Calendar as CalendarIcon, Clock, Shield, 
-  ChevronRight, ChevronDown, Download, FileText, CheckCircle
+import {
+  User, Mail, Calendar as CalendarIcon, Clock, Shield,
+  ChevronRight, ChevronDown, Download, FileText, CheckCircle, UserCog
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { GlassModal } from '../../components/ui/GlassModal';
@@ -18,13 +18,16 @@ export const AdminUserDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getUserDetail, adminSuspendUser, adminDeleteUser } = useAdmin();
+  const { getUserDetail, adminSuspendUser, adminDeleteUser, adminChangeUserRole } = useAdmin();
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [suspending, setSuspending] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>('support');
   const [showExportSuccess, setShowExportSuccess] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'venter' | 'listener' | 'both'>('venter');
+  const [showRoleConfirm, setShowRoleConfirm] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -58,6 +61,28 @@ export const AdminUserDetail = () => {
   const handleExportPDF = () => {
     setShowExportSuccess(true);
     setTimeout(() => setShowExportSuccess(false), 3000);
+  };
+
+  const handleChangeRole = async () => {
+    setChangingRole(true);
+    try {
+      await adminChangeUserRole(id!, selectedRole);
+      // Update local user state to reflect new role
+      const newRoles = selectedRole === 'both'
+        ? ['venter', 'listener']
+        : [selectedRole];
+      setUser({
+        ...user,
+        availableRoles: newRoles,
+        activeRole: selectedRole === 'both' ? 'listener' : selectedRole,
+      });
+      setShowRoleConfirm(false);
+      toast.success(`Role updated to ${selectedRole === 'both' ? 'Venter + Listener' : selectedRole}`);
+    } catch (error) {
+      toast.error('Failed to update role');
+    } finally {
+      setChangingRole(false);
+    }
   };
 
   if (loading) return (
@@ -229,6 +254,30 @@ export const AdminUserDetail = () => {
             {user.status === 'suspended' ? t('Admin.review.suspend', 'Reactivate User') : t('Admin.review.suspend', 'Suspend User')}
           </Button>
 
+          {/* Change Role */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value as 'venter' | 'listener' | 'both')}
+                className="w-full h-14 rounded-full bg-white/10 border border-white/10 text-white text-xs font-bold uppercase tracking-widest px-5 pr-10 appearance-none cursor-pointer focus:outline-none focus:border-white/30"
+              >
+                <option value="venter" className="bg-[#1a1a2e] text-white">Venter</option>
+                <option value="listener" className="bg-[#1a1a2e] text-white">Listener</option>
+                <option value="both" className="bg-[#1a1a2e] text-white">Venter + Listener</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+            </div>
+            <Button
+              variant="glass"
+              onClick={() => setShowRoleConfirm(true)}
+              leftIcon={<UserCog size={16} />}
+              className="rounded-full h-14 px-5 font-bold uppercase tracking-widest text-xs border-white/10 whitespace-nowrap"
+            >
+              Change Role
+            </Button>
+          </div>
+
           <Button
             variant="glass"
             fullWidth
@@ -248,6 +297,20 @@ export const AdminUserDetail = () => {
         title={t('Admin.userDetail.exportSuccess.title', 'Export Completed')}
         message={t('Admin.userDetail.exportSuccess.subtitle', 'Your user data has been exported successfully.')}
         showButtons={false}
+      />
+
+      <GlassModal
+        isOpen={showRoleConfirm}
+        onClose={() => setShowRoleConfirm(false)}
+        icon={<UserCog className="text-white" />}
+        title="Change User Role"
+        message={`Set this user's role to "${selectedRole === 'both' ? 'Venter + Listener' : selectedRole}"? This will update their active role and available roles immediately.`}
+        primaryButtonText={changingRole ? 'Updating…' : 'Confirm'}
+        secondaryButtonText="Cancel"
+        onPrimaryPress={handleChangeRole}
+        onSecondaryPress={() => setShowRoleConfirm(false)}
+        loading={changingRole}
+        showButtons
       />
     </div>
   );
