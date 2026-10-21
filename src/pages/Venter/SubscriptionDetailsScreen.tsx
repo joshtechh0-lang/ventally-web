@@ -154,7 +154,7 @@ export const SubscriptionDetailsScreen = () => {
                   </div>
                 </GlassCard>
               </div>
-            )}
+            ) : null}
           </>
         )}
       </div>
