@@ -13,10 +13,11 @@ export const TermsAndConditions = () => {
   const role = user?.role || user?.userType || 'venter';
 
   const handleAccept = () => {
+    // Skip optional questions — go straight to the destination
     if (role === 'listener') {
-      navigate('/signup/questions', { state: { userType: role } });
+      navigate('/signup/listener-training');
     } else {
-      navigate('/signup/questions', { state: { userType: role } });
+      navigate('/venter/home');
     }
   };
 

@@ -152,8 +152,8 @@ export const SignUpWeb = () => {
         <p className="text-sm font-medium text-white mb-2">{t('SignUp.howWillYouUse')}</p>
         <div className="flex gap-3 mb-2">
           {([
-            { value: 'venter' as const, label: `${t('SignUp.usageOptions.wantToVent')}`, desc: 'Get anonymous support' },
-            { value: 'listener' as const, label: form.userType === 'listener' ? '🎧 I want to listen and help' : `${t('SignUp.usageOptions.wantToListen')}`, desc: 'Earn by supporting others' },
+            { value: 'venter' as const, label: `I'm just trying to vent`, desc: 'Get anonymous support' },
+            { value: 'listener' as const, label: `I'm a listener`, desc: 'Earn by supporting others' },
           ] as const).map(role => {
             const isSelected = form.userType === role.value;
             return (
