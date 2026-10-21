@@ -92,8 +92,10 @@ export const VenterDashboard = () => {
         // Check balance on mount for low balance warning
   useEffect(() => {
     getWallet().then((res: any) => {
-      setBalance(res?.balance);
-      const minutes = res?.balance?.minutes ?? 0;
+      // API returns { success, data: { balance: { minutes, currency } } }
+      const balanceData = res?.data?.balance ?? res?.balance ?? null;
+      setBalance(balanceData);
+      const minutes = balanceData?.minutes ?? 0;
       if (minutes < 5 && minutes > 0) {
         setShowLowBalanceModal(true);
       }
@@ -300,7 +302,7 @@ export const VenterDashboard = () => {
               {/* Available Balance Card */}
               <GlassCard bordered className="mt-3">
                 <p className="text-sm font-semibold text-white mb-2">{t('VenterHome.availableBalance', 'Your Available Balance')}</p>
-                {balance === null ? null : (balance?.minutes ?? 0) > 0 ? (
+                {(balance?.minutes ?? 0) > 0 ? (
                   <div className="space-y-1">
                     <p className="text-sm text-white">📞 <span className="font-semibold">{balance.minutes}</span> {t('VenterHome.voiceMinutesRemaining', 'voice minutes remaining')}</p>
                     <p className="text-sm text-white">💬 <span className="font-semibold">{balance.minutes}</span> {t('VenterHome.textsRemaining', 'texts remaining')}</p>
