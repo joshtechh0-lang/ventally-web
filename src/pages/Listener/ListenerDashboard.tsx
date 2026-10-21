@@ -37,6 +37,7 @@ export const ListenerDashboard = () => {
 
   const [loadingToggle, setLoadingToggle] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [bankConnected, setBankConnected] = useState(false);
 
   const handleAvailabilityToggle = async () => {
     setLoadingToggle(true);
@@ -73,6 +74,17 @@ export const ListenerDashboard = () => {
       }
     };
     fetchUnreadCount();
+  }, []);
+
+  // Check if bank account is connected so the "Complete Profile" banner hides correctly
+  useEffect(() => {
+    import('../../api/apiInstance').then(({ default: apiInstance }) => {
+      apiInstance.get('earnings/bank-account/status')
+        .then((res: any) => {
+          if (res?.data?.status?.payoutEnabled) setBankConnected(true);
+        })
+        .catch(() => {});
+    });
   }, []);
 
   // Silently refresh presence whenever the user focuses this screen (mount + window focus + tab visible)
@@ -293,7 +305,7 @@ export const ListenerDashboard = () => {
         </section>
 
         {/* Profile completion indicator */}
-        {!user?.payoutMethod && (
+        {!bankConnected && (
           <GlassCard bordered padding="md" rounded="2xl" className="border-yellow-500/30 bg-yellow-500/5">
             <div className="flex items-center gap-3">
               <span className="text-2xl">⚡</span>
