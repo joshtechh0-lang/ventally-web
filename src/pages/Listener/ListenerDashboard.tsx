@@ -38,6 +38,7 @@ export const ListenerDashboard = () => {
   const [loadingToggle, setLoadingToggle] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [bankConnected, setBankConnected] = useState(false);
+  const [bankStatus, setBankStatus] = useState<'not_connected' | 'pending' | 'enabled'>('not_connected');
 
   const handleAvailabilityToggle = async () => {
     setLoadingToggle(true);
@@ -81,7 +82,14 @@ export const ListenerDashboard = () => {
     import('../../api/apiInstance').then(({ default: apiInstance }) => {
       apiInstance.get('earnings/bank-account/status')
         .then((res: any) => {
-          if (res?.data?.status?.payoutEnabled) setBankConnected(true);
+          const s = res?.data?.status;
+          if (s?.payoutEnabled) {
+            setBankConnected(true);
+            setBankStatus('enabled');
+          } else if (s?.stripeAccountStatus && s.stripeAccountStatus !== 'not_connected') {
+            // Bank connected but Stripe hasn't enabled payouts yet (pending review)
+            setBankStatus('pending');
+          }
         })
         .catch(() => {});
     });
@@ -304,21 +312,32 @@ export const ListenerDashboard = () => {
           )}
         </section>
 
-        {/* Profile completion indicator */}
-        {!bankConnected && (
-          <GlassCard bordered padding="md" rounded="2xl" className="border-yellow-500/30 bg-yellow-500/5">
+        {/* Profile completion / payout status indicator */}
+        {bankStatus !== 'enabled' && (
+          <GlassCard bordered padding="md" rounded="2xl" className={bankStatus === 'pending' ? "border-blue-400/30 bg-blue-400/5" : "border-yellow-500/30 bg-yellow-500/5"}>
             <div className="flex items-center gap-3">
-              <span className="text-2xl">⚡</span>
+              <span className="text-2xl">{bankStatus === 'pending' ? '🕐' : '⚡'}</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-white">Complete your profile to start earning</p>
-                <p className="text-xs text-white/60 mt-0.5">Add payout details to receive session payments</p>
+                {bankStatus === 'pending' ? (
+                  <>
+                    <p className="text-sm font-semibold text-white">Payout setup in review</p>
+                    <p className="text-xs text-white/60 mt-0.5">Your bank is connected — Stripe is reviewing your account. This usually takes 1–2 business days.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-white">Complete your profile to start earning</p>
+                    <p className="text-xs text-white/60 mt-0.5">Add payout details to receive session payments</p>
+                  </>
+                )}
               </div>
-              <button
-                onClick={() => navigate('/listener/payout-method')}
-                className="text-xs text-primary font-medium hover:underline flex-shrink-0"
-              >
-                Set up →
-              </button>
+              {bankStatus !== 'pending' && (
+                <button
+                  onClick={() => navigate('/listener/payout-method')}
+                  className="text-xs text-primary font-medium hover:underline flex-shrink-0"
+                >
+                  Set up →
+                </button>
+              )}
             </div>
           </GlassCard>
         )}
