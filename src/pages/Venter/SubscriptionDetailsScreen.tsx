@@ -154,16 +154,6 @@ export const SubscriptionDetailsScreen = () => {
                   </div>
                 </GlassCard>
               </div>
-            ) : (
-              /* No Active Subscription State */
-              <GlassCard bordered padding="xl" rounded="3xl" className="text-center">
-                <h3 className="text-[17px] font-bold text-white mb-2">
-                  {t('SubscriptionDetails.noActiveSubscription')}
-                </h3>
-                <Button variant="primary" fullWidth onClick={handleManage}>
-                  {t('SubscriptionDetails.choosePlan')}
-                </Button>
-              </GlassCard>
             )}
           </>
         )}
