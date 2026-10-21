@@ -34,16 +34,16 @@ export const ReferralScreen = () => {
   };
 
   const handleShare = () => {
-    if (!referralLink) return;
+    if (!referralCode) return;
+    const shareText = `Give $5, get $5! 💜 Join Ventally using my referral code ${referralCode} and get $5 in credit. I'll get $5 too!\n\nDownload on the App Store: https://apps.apple.com/app/ventally/id6737272195\nGet it on Google Play: https://play.google.com/store/apps/details?id=com.ventally\nUse the web app: https://ventally.app`;
     if (navigator.share) {
       navigator.share({
         title: 'Join Ventally',
-        text: `Use my referral code ${referralCode} to get 5 free minutes on Ventally!`,
-        url: referralLink,
+        text: shareText,
       }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(referralLink);
-      toastSuccess('Referral link copied!');
+      navigator.clipboard.writeText(shareText);
+      toastSuccess('Referral message copied!');
     }
   };
 
