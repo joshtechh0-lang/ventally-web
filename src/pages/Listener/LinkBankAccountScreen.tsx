@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
-import { Building } from 'lucide-react';
+import { Building, AlertTriangle, Mail } from 'lucide-react';
 import apiInstance from '../../api/apiInstance';
 import { toastError } from '../../utils/toast';
+
+const SUPPORT_EMAIL = 'support@ventally.co';
 
 const STRIPE_SUPPORTED_COUNTRIES = [
   { code: 'AU', name: 'Australia' },
@@ -64,6 +66,9 @@ export const LinkBankAccountScreen = () => {
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState('');
 
+  const isCountryUnsupported = country === '__other__';
+  const selectedCountryName = STRIPE_SUPPORTED_COUNTRIES.find(c => c.code === country)?.name;
+
   const handleContinue = async () => {
     if (!country) {
       toastError('Please select your country');
@@ -103,7 +108,7 @@ export const LinkBankAccountScreen = () => {
           </h2>
           <p className="text-sm text-white/60 mb-6">Select your country to set up your payout account.</p>
 
-          <div className="w-full mb-6">
+          <div className="w-full mb-4">
             <select
               value={country}
               onChange={e => setCountry(e.target.value)}
@@ -114,28 +119,53 @@ export const LinkBankAccountScreen = () => {
               {STRIPE_SUPPORTED_COUNTRIES.map(c => (
                 <option key={c.code} value={c.code} style={{ background: '#1a1a2e' }}>{c.name}</option>
               ))}
+              <option value="__other__" style={{ background: '#1a1a2e', color: '#fbbf24' }}>My country is not listed</option>
             </select>
           </div>
 
-          <Button
-            variant="primary"
-            fullWidth
-            loading={loading}
-            disabled={!country}
-            onClick={handleContinue}
-            className="h-14 rounded-full font-semibold mb-4"
-          >
-            {t('Common.continue', 'Continue')}
-          </Button>
+          {/* Unsupported country — prominent notice */}
+          {isCountryUnsupported && (
+            <div className="w-full mb-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-left">
+              <div className="flex items-start gap-3 mb-2">
+                <AlertTriangle size={18} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-semibold text-white">Stripe payouts not available in your region</p>
+              </div>
+              <p className="text-xs text-white/70 leading-relaxed mb-3">
+                Unfortunately, Stripe Connect — the service we use for listener payouts — doesn't yet support your country. You can still use the app and take sessions.
+              </p>
+              <p className="text-xs text-white/70 leading-relaxed mb-3">
+                <strong className="text-white">We'll work with you on a manual payout arrangement.</strong> Reach out and we'll get it sorted:
+              </p>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=International%20Payout%20Setup&body=Hi%2C%20I'm%20an%20approved%20listener%20and%20need%20help%20setting%20up%20payouts%20in%20my%20country.`}
+                className="inline-flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+              >
+                <Mail size={14} />
+                {SUPPORT_EMAIL}
+              </a>
+            </div>
+          )}
 
-          <p className="text-xs text-white/40 leading-relaxed">
-            {t('Listener.linkBank.footer', 'You will be redirected to Stripe to securely link your bank account. This process is encrypted and safe.')}
-          </p>
+          {/* Continue button — only when a supported country is chosen */}
+          {!isCountryUnsupported && (
+            <Button
+              variant="primary"
+              fullWidth
+              loading={loading}
+              disabled={!country}
+              onClick={handleContinue}
+              className="h-14 rounded-full font-semibold mb-4"
+            >
+              {t('Common.continue', 'Continue')}
+            </Button>
+          )}
+
+          {!isCountryUnsupported && (
+            <p className="text-xs text-white/40 leading-relaxed">
+              {t('Listener.linkBank.footer', 'You will be redirected to Stripe to securely link your bank account. This process is encrypted and safe.')}
+            </p>
+          )}
         </GlassCard>
-
-        <p className="text-xs text-white/30 text-center mt-4">
-          If your country is not listed, Stripe payouts are not yet available in your region.
-        </p>
       </div>
     </div>
   );
