@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -43,11 +44,7 @@ export const ListenerWallet = () => {
   return (
     <div className="page-wrapper page-wrapper--wide animate-fade-in">
       <div className="w-full lg:max-w-3xl xl:max-w-4xl lg:mx-auto">
-        <header className="mb-6 text-center lg:mb-8">
-          <h1 className="text-lg font-semibold text-white tracking-tight lg:text-2xl lg:font-bold">
-            {t('Listener.wallet.title', 'Wallet')}
-          </h1>
-        </header>
+        <PageHeader title={t('Listener.wallet.title', 'Wallet')} onBack={() => navigate(-1)} />
 
         {/* Lifetime earnings hero — matches native mainCard */}
         <GlassCard

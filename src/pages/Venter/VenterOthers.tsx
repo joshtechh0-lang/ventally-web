@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, Shield, Users } from 'lucide-react';
 import { GlassCard } from '../../components/ui/GlassCard';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 // PNG icons matching the RN app
 import happyIcon    from '../../assets/icons/happy.png';
@@ -57,10 +58,7 @@ export const VenterOthers = () => {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      {/* Centered title — matches RN */}
-      <h1 className="text-lg font-medium text-white text-center mb-6">
-        {t('VenterOthers.title', 'Others')}
-      </h1>
+      <PageHeader title={t('VenterOthers.title', 'Others')} onBack={() => navigate(-1)} />
 
       <div className="space-y-4">
         {OPTIONS.map(opt => (

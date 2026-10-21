@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PageHeader } from '../../components/ui/PageHeader';
 import {
   ChevronRight,
   Bell,
@@ -105,10 +106,7 @@ export const VenterSettings = () => {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      {/* Title — centered, matching RN */}
-      <h1 className="text-lg font-medium text-white text-center mb-6">
-        {t('VenterSettings.title')}
-      </h1>
+      <PageHeader title={t('VenterSettings.title')} onBack={() => navigate(-1)} />
 
       <GlassCard padding="none" rounded="2xl">
         {SETTINGS_ITEMS.map((item, i) => {
