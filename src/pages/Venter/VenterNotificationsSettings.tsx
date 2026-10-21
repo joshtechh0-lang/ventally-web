@@ -112,11 +112,15 @@ const saveSettings = async (payload: Partial<NotificationSettings>): Promise<boo
 // ─── Map API → local state ────────────────────────────────────────────────────
 const apiToLocal = (s: NotificationSettings): Partial<LocalState> => ({
   pauseAll: s.allNotifications === false,
-  messages: !!s.messageNotifications,
-  call: !!s.callNotifications,
-  reminder: !!s.reminderNotifications,
-  sound: !!s.soundVibration,
-  inAppAlert: !!s.inAppAlerts,
+  messages: s.messageNotifications ?? true,
+  call: s.callNotifications ?? true,
+  reminder: s.reminderNotifications ?? true,
+  sound: s.soundVibration ?? true,
+  inAppAlert: s.inAppAlerts ?? true,
+  listenerReplied: s.listenerReplied ?? true,
+  moodLog: s.moodLog ?? true,
+  reflectionLog: s.reflectionLog ?? true,
+  wellnessNudges: s.wellnessNudges ?? true,
   remindMeAt: utcToLocal(s.remindMeAtUtc || '00:00'),
 });
 
@@ -157,12 +161,12 @@ export const VenterNotificationsSettings = () => {
 
   const [state, setState] = useState<LocalState>({
     pauseAll: false,
-    messages: false,
-    call: false,
+    messages: true,
+    call: true,
     reminder: true,
     sound: true,
     inAppAlert: true,
-    listenerReplied: false,
+    listenerReplied: true,
     moodLog: true,
     reflectionLog: true,
     wellnessNudges: true,

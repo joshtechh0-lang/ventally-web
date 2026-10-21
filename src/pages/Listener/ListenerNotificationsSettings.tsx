@@ -31,8 +31,8 @@ export const ListenerNotificationsSettings = () => {
   );
   const [notifs, setNotifs] = useState<NotifState>({
     pauseAll: false,
-    messages: false,
-    call: false,
+    messages: true,
+    call: true,
     reminder: true,
     sound: true,
     inAppAlert: true,
@@ -46,12 +46,13 @@ export const ListenerNotificationsSettings = () => {
           const s = res.data;
           setNotifs(prev => ({
             ...prev,
-            pauseAll: !s.allNotifications,
-            messages: !!s.messageNotifications,
-            call: !!s.callNotifications,
-            reminder: !!s.reminderNotifications,
-            sound: !!s.soundVibration,
-            inAppAlert: !!s.inAppAlerts,
+            pauseAll: s.allNotifications === false,
+            messages: s.messageNotifications ?? true,
+            call: s.callNotifications ?? true,
+            reminder: s.reminderNotifications ?? true,
+            sound: s.soundVibration ?? true,
+            inAppAlert: s.inAppAlerts ?? true,
+            activityStatus: s.activityStatus ?? true,
           }));
         }
       })
