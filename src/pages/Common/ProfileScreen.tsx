@@ -11,7 +11,7 @@ import { logout } from '../../store/slices/userSlice';
 import type { RootState } from '../../store/store';
 import { Gift, Link2,
   User, ChevronRight, LogOut, Trash2, CreditCard,
-  Globe, Clock, FileText, Shield, Wallet
+  Globe, Clock, FileText, Shield, Wallet, Headphones, Heart
 } from 'lucide-react';
 
 export const ProfileScreen = () => {
@@ -111,6 +111,29 @@ export const ProfileScreen = () => {
   return (
     <div className="page-wrapper animate-fade-in">
       <PageHeader title={t('Profile.title', 'Profile')} onBack={() => navigate(-1)} />
+
+      {/* Role indicator */}
+      <GlassCard padding="md" rounded="2xl" className="mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${isVenter ? 'bg-primary/20' : 'bg-accent/20'}`}>
+            {isVenter ? <Heart size={18} className="text-primary" /> : <Headphones size={18} className="text-accent" />}
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold">Your Role</p>
+            <p className="text-sm font-semibold text-white">
+              {isVenter ? 'Venter' : 'Support Guide (Listener)'}
+            </p>
+          </div>
+          <span className={`ml-auto text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isVenter ? 'bg-primary/20 text-primary' : 'bg-accent/20 text-accent'}`}>
+            {isVenter ? 'Venter' : 'Listener'}
+          </span>
+        </div>
+        <p className="text-xs text-white/40 mt-2 ml-13 pl-[52px]">
+          {isVenter
+            ? 'You use Ventally to vent and connect with Support Guides.'
+            : 'You are a Support Guide — venters are matched with you for support sessions.'}
+        </p>
+      </GlassCard>
 
       {/* Menu Items */}
       <GlassCard padding="none" rounded="2xl" className="mb-4">
