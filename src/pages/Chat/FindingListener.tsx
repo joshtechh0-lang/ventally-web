@@ -94,6 +94,12 @@ export const FindingListener = () => {
       setStatus('lowBalance');
     });
 
+    // No listeners online — show timeout UI immediately instead of waiting 2 minutes
+    socketService.on('requests:broadcast:no-listeners', () => {
+      console.log('[FindingListener] Server: no listeners available');
+      setStatus('timeout');
+    });
+
     interface AcceptedData {
       id?: string;
       callId?: string;
@@ -170,6 +176,7 @@ export const FindingListener = () => {
 
     return () => {
       socketService.off('requests:broadcast:insufficient-balance');
+      socketService.off('requests:broadcast:no-listeners');
       socketService.off('call:accepted');
       socketService.off('chat:accepted');
     };
