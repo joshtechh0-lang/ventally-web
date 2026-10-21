@@ -1594,6 +1594,11 @@
       "totalHappyDays_one": "You were happy for {{days}} day",
       "totalHappyDays_other": "You were happy for {{days}} days"
     },
+    "availableBalance": "Your Available Balance",
+    "voiceMinutesRemaining": "voice minutes remaining",
+    "textsRemaining": "texts remaining",
+    "noBalance": "You have no voice minutes or texts available. Add more to start connecting.",
+    "addMinutesAndTexts": "Add Minutes & Texts",
     "reflectionDetailTitle": "Your Reflection",
     "editReflection": "Edit Reflection",
     "saveReflection": "Save Reflection",

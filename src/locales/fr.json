@@ -1592,6 +1592,11 @@
       "totalHappyDays_one": "Vous étiez heureux pendant {{days}} jour",
       "totalHappyDays_other": "Vous avez été heureux pendant {{days}} jours"
     },
+    "availableBalance": "Votre solde disponible",
+    "voiceMinutesRemaining": "minutes vocales restantes",
+    "textsRemaining": "messages restants",
+    "noBalance": "Vous n'avez pas de minutes vocales ni de messages disponibles. Ajoutez-en pour commencer à vous connecter.",
+    "addMinutesAndTexts": "Ajouter des minutes et des messages",
     "reflectionDetailTitle": "Votre réflexion",
     "editReflection": "Modifier la réflexion",
     "saveReflection": "Enregistrer la réflexion",

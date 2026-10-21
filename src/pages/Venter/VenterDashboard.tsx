@@ -297,26 +297,25 @@ export const VenterDashboard = () => {
                 />
               )}
 
-              {/* Streak / Happy Days Card */}
+              {/* Available Balance Card */}
               <GlassCard bordered className="mt-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">{t('VenterHome.moods.happy')}</p>
-                    <p className="text-sm font-medium text-white mt-0.5">
-                      {happyDays === 0
-                        ? 'Start tracking — log your first mood'
-                        : happyDays === 1
-                        ? t('VenterHome.streakCard.totalHappyDays_one', { days: happyDays })
-                        : t('VenterHome.streakCard.totalHappyDays_other', { days: happyDays })}
-                    </p>
+                <p className="text-sm font-semibold text-white mb-2">{t('VenterHome.availableBalance', 'Your Available Balance')}</p>
+                {balance === null ? null : (balance?.minutes ?? 0) > 0 ? (
+                  <div className="space-y-1">
+                    <p className="text-sm text-white">📞 <span className="font-semibold">{balance.minutes}</span> {t('VenterHome.voiceMinutesRemaining', 'voice minutes remaining')}</p>
+                    <p className="text-sm text-white">💬 <span className="font-semibold">{balance.minutes}</span> {t('VenterHome.textsRemaining', 'texts remaining')}</p>
                   </div>
-                  <img
-                    src={happyIcon}
-                    alt="happy"
-                    className="w-8 h-8 object-contain"
-                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.85 }}
-                  />
-                </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-white/70 mb-3">{t('VenterHome.noBalance', 'You have no voice minutes or texts available. Add more to start connecting.')}</p>
+                    <button
+                      onClick={() => navigate('/venter/wallet/add-funds')}
+                      className="px-4 py-2 bg-primary hover:bg-primary-hover transition-colors text-white text-xs font-semibold rounded-lg"
+                    >
+                      {t('VenterHome.addMinutesAndTexts', 'Add Minutes & Texts')}
+                    </button>
+                  </div>
+                )}
               </GlassCard>
             </div>
 
