@@ -23,6 +23,11 @@ interface NotificationSettings {
   remindMeAtUtc: string;
   quietHoursStartUtc?: string;
   quietHoursEndUtc?: string;
+  listenerReplied?: boolean;
+  moodLog?: boolean;
+  reflectionLog?: boolean;
+  wellnessNudges?: boolean;
+  activityStatus?: boolean;
 }
 
 interface LocalState {
