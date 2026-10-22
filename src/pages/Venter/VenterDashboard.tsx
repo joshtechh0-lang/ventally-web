@@ -109,9 +109,7 @@ export const VenterDashboard = () => {
   // Fetch wallet balance on mount
   useEffect(() => {
     getWallet().then((res: any) => {
-      console.log('[Wallet] raw response:', JSON.stringify(res));
       const balanceData = res?.balance ?? res?.data?.balance ?? null;
-      console.log('[Wallet] balanceData:', JSON.stringify(balanceData));
       setBalance(balanceData);
       const minutes = balanceData?.minutes ?? 0;
       if (minutes < 5 && minutes > 0) {
