@@ -92,8 +92,9 @@ export const VenterDashboard = () => {
         // Check balance on mount for low balance warning
   useEffect(() => {
     getWallet().then((res: any) => {
-      // API returns { success, data: { balance: { minutes, currency } } }
-      const balanceData = res?.data?.balance ?? res?.balance ?? null;
+      // API body: { balance: { minutes, currency }, autoRecharge: {...} }
+      // getWallet() returns res.data (raw API body), so balance is at res?.balance
+      const balanceData = res?.balance ?? res?.data?.balance ?? null;
       setBalance(balanceData);
       const minutes = balanceData?.minutes ?? 0;
       if (minutes < 5 && minutes > 0) {
