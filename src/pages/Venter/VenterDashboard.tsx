@@ -89,23 +89,7 @@ export const VenterDashboard = () => {
           setUnreadCount(count);
         }
 
-        // Check balance on mount for low balance warning
-  useEffect(() => {
-    getWallet().then((res: any) => {
-      console.log('[Wallet] raw response:', JSON.stringify(res));
-      // API body: { balance: { minutes, currency }, autoRecharge: {...} }
-      // getWallet() returns res.data (raw API body), so balance is at res?.balance
-      const balanceData = res?.balance ?? res?.data?.balance ?? null;
-      console.log('[Wallet] balanceData:', JSON.stringify(balanceData));
-      setBalance(balanceData);
-      const minutes = balanceData?.minutes ?? 0;
-      if (minutes < 5 && minutes > 0) {
-        setShowLowBalanceModal(true);
-      }
-    }).catch(() => {});
-  }, []);
-
-  // Fetch online listener count
+        // Fetch online listener count
         try {
           const listenersRes = await apiInstance.get('availability/listeners');
           const count = (listenersRes as any)?.data?.count ?? (listenersRes as any)?.data?.listeners?.length ?? 0;
@@ -120,6 +104,20 @@ export const VenterDashboard = () => {
       }
     };
     fetchData();
+  }, []);
+
+  // Fetch wallet balance on mount
+  useEffect(() => {
+    getWallet().then((res: any) => {
+      console.log('[Wallet] raw response:', JSON.stringify(res));
+      const balanceData = res?.balance ?? res?.data?.balance ?? null;
+      console.log('[Wallet] balanceData:', JSON.stringify(balanceData));
+      setBalance(balanceData);
+      const minutes = balanceData?.minutes ?? 0;
+      if (minutes < 5 && minutes > 0) {
+        setShowLowBalanceModal(true);
+      }
+    }).catch(() => {});
   }, []);
 
   // Fetch online listener count and poll every 30 seconds
