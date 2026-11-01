@@ -9,7 +9,7 @@ import { AppStoreIcon } from '../../components/ui/AppStoreIcon';
 import { Sparkles, Shield, Heart, MessageCircle } from 'lucide-react';
 
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.ventally';
-const APP_STORE_URL = 'https://apps.apple.com/app/ventally/id6739500302';
+const APP_STORE_URL = 'https://apps.apple.com/us/app/ventally/id6794718001';
 
 export const Onboarding = () => {
   const { t } = useTranslation();
