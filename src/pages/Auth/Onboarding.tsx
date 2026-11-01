@@ -5,9 +5,11 @@ import { GlassCard } from '../../components/ui/GlassCard';
 import { MainBackground } from '../../components/ui/MainBackground';
 import { AppBrandIcon } from '../../components/ui/AppBrandIcon';
 import { PlayStoreIcon } from '../../components/ui/PlayStoreIcon';
+import { AppStoreIcon } from '../../components/ui/AppStoreIcon';
 import { Sparkles, Shield, Heart, MessageCircle } from 'lucide-react';
 
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.ventally';
+const APP_STORE_URL = 'https://apps.apple.com/app/ventally/id6739500302';
 
 export const Onboarding = () => {
   const { t } = useTranslation();
@@ -176,6 +178,21 @@ export const Onboarding = () => {
               >
                 <PlayStoreIcon className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
                 <span className="font-medium text-[13px]">{t('OnBoarding.playStoreCta', 'Get it on Google Play')}</span>
+              </a>
+
+              <a
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-glass w-full flex items-center justify-center gap-2.5 no-underline text-white/70 transition-all hover:bg-white/10 hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 mb-3"
+                style={{ minHeight: '46px', height: '46px' }}
+                aria-label={t(
+                  'OnBoarding.appStoreAria',
+                  'Download Ventally on the App Store in a new tab',
+                )}
+              >
+                <AppStoreIcon className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+                <span className="font-medium text-[13px]">{t('OnBoarding.appStoreCta', 'Get it on the App Store')}</span>
               </a>
 
               <Button
