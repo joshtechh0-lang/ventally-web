@@ -31,10 +31,7 @@
     "invalidEmail": "Please enter a valid email address",
     "fillRequiredFields": "Please fill out all required fields",
     "somethingWentWrong": "Something went wrong",
-    "error": {
-      "somethingWentWrong": "Something went wrong",
-      "default": "Error"
-    },
+    "error": "An error occurred",
     "passwordValidationError": "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     "confirmAction": "Confirm Action",
     "areYouSure": "Are you sure you want to proceed?",
@@ -1507,7 +1504,7 @@
     "didntReceive": "Didn't receive the code?",
     "resend": "Resend",
     "verifyAccount": "Verify Account",
-"otpHelperText": "Enter the 4-digit code above to continue",
+    "otpHelperText": "Enter the 4-digit code above to continue",
     "otpSent": "OTP sent successfully",
     "infoTextEmail": "Verification emails may take a few minutes to arrive. Please check your Spam or Promotions folder if you do not see it. Your code will remain valid for up to 1 hour, and new codes can be requested after 2 minutes.",
     "infoTextPhone": "Verification messages may take a few minutes to arrive. Please check your network connection if you do not see it. Your code will remain valid for up to 1 hour, and new codes can be requested after 2 minutes."

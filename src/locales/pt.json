@@ -30,10 +30,7 @@
     "invalidEmail": "Insira um endereço de e-mail válido",
     "fillRequiredFields": "Preencha todos os campos obrigatórios",
     "somethingWentWrong": "Algo deu errado",
-    "error": {
-      "somethingWentWrong": "Algo deu errado",
-      "default": "Erro"
-    },
+    "error": "An error occurred",
     "passwordValidationError": "A senha deve ter pelo menos 8 caracteres, conter pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial",
     "confirmAction": "Confirmar ação",
     "areYouSure": "Tem certeza de que deseja continuar?",

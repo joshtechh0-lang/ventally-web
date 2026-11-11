@@ -30,10 +30,7 @@
     "invalidEmail": "Por favor ingrese una dirección de correo electrónico válida",
     "fillRequiredFields": "Por favor complete todos los campos obligatorios",
     "somethingWentWrong": "Algo salió mal",
-    "error": {
-      "somethingWentWrong": "Algo salió mal",
-      "default": "Error"
-    },
+    "error": "An error occurred",
     "passwordValidationError": "La contraseña debe tener al menos 8 caracteres y contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.",
     "confirmAction": "Confirmar acción",
     "areYouSure": "¿Estás seguro de que deseas continuar?",
