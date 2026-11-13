@@ -36,6 +36,19 @@
       }
     </style>
 
+    <!-- Refersion Affiliate / Referral Tracking
+         Replace YOUR_REFERSION_PUBLIC_KEY with the key from your Refersion dashboard.
+         This snippet initialises rfsn so trackCheckout() is available on conversion. -->
+    <script>
+      (function(r,e,f,s,i,o,n){
+        r[i]=r[i]||function(){(r[i].q=r[i].q||[]).push(arguments)};
+        o=e.createElement(f);o.async=1;o.src='https://cdn.refersion.com/refersion.js';
+        n=e.getElementsByTagName(f)[0];n.parentNode.insertBefore(o,n);
+      })(window,document,'script',null,'rfsn');
+      rfsn('setKey','YOUR_REFERSION_PUBLIC_KEY');
+      rfsn('readCookie');
+    </script>
+
     <!-- Microsoft Clarity Analytics -->
     <script type="text/javascript">
       (function(c,l,a,r,i,t,y){

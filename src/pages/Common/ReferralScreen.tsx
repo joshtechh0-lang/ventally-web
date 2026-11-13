@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Gift, Copy, Share2, Check, Users } from 'lucide-react';
+import { Gift, Copy, Share2, Check, Users, Download } from 'lucide-react';
 import apiInstance from '../../api/apiInstance';
 import { toastSuccess, toastError } from '../../utils/toast';
 
@@ -14,6 +14,8 @@ export const ReferralScreen = () => {
   const [referralData, setReferralData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     apiInstance.get('referrals/my-stats')
@@ -33,18 +35,30 @@ export const ReferralScreen = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getShareCaption = () =>
+    `💜 I use Ventally to talk to a real person whenever I need support — anonymously.\n\nSign up with my code and we both get 5 free minutes:\n\n🔑 Code: ${referralCode}\n🔗 Link: ${referralLink}\n\nApp Store: https://apps.apple.com/app/ventally/id6737272195\nPlay Store: https://play.google.com/store/apps/details?id=com.ventally`;
+
   const handleShare = () => {
     if (!referralCode) return;
-    const shareText = `Give $5, get $5! 💜 Join Ventally using my referral code ${referralCode} and get $5 in credit. I'll get $5 too!\n\nDownload on the App Store: https://apps.apple.com/app/ventally/id6737272195\nGet it on Google Play: https://play.google.com/store/apps/details?id=com.ventally\nUse the web app: https://ventally.app`;
+    const caption = getShareCaption();
     if (navigator.share) {
       navigator.share({
-        title: 'Join Ventally',
-        text: shareText,
+        title: 'Join Ventally — get 5 free minutes',
+        text: caption,
+        url: referralLink,
       }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(shareText);
+      navigator.clipboard.writeText(caption);
       toastSuccess('Referral message copied!');
     }
+  };
+
+  const handleCopyLink = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopiedLink(true);
+    toastSuccess('Referral link copied!');
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   return (
@@ -55,19 +69,79 @@ export const ReferralScreen = () => {
         onBack={() => navigate(-1)}
       />
 
-      {/* Hero */}
-      <GlassCard bordered padding="lg" className="mb-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
-          <Gift size={32} className="text-primary" />
+      {/* Shareable referral graphic card — screenshottable / shareable */}
+      {!loading && referralCode && (
+        <div ref={cardRef} className="mb-6 rounded-3xl overflow-hidden" style={{
+          background: 'linear-gradient(135deg, #1a0a3a 0%, #0f0620 50%, #100030 100%)',
+          border: '1px solid rgba(167,139,250,0.25)',
+          boxShadow: '0 0 60px rgba(139,92,246,0.15)',
+        }}>
+          {/* Decorative top bar */}
+          <div style={{ height: 4, background: 'linear-gradient(90deg, #7c3aed, #a855f7, #7c3aed)' }} />
+          <div className="px-6 py-8 text-center">
+            {/* Logo area */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <span style={{ fontSize: 18 }}>💜</span>
+              </div>
+              <span style={{ color: 'white', fontWeight: 700, fontSize: 20, letterSpacing: '-0.5px' }}>
+                ventally
+              </span>
+            </div>
+            {/* Headline */}
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
+              You're invited
+            </p>
+            <h2 style={{ color: 'white', fontSize: 22, fontWeight: 800, lineHeight: 1.3, marginBottom: 8 }}>
+              Talk to someone who cares.
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
+              Anonymous peer support, available whenever you need it.
+              Sign up with my code and we <strong style={{ color: 'white' }}>both get 5 free minutes</strong>.
+            </p>
+            {/* Code badge */}
+            <div style={{
+              display: 'inline-block',
+              background: 'rgba(124,58,237,0.2)',
+              border: '1.5px solid rgba(167,139,250,0.4)',
+              borderRadius: 16,
+              padding: '12px 32px',
+              marginBottom: 20,
+            }}>
+              <p style={{ color: 'rgba(167,139,250,0.7)', fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 4 }}>
+                REFERRAL CODE
+              </p>
+              <p style={{ color: 'white', fontSize: 28, fontWeight: 800, letterSpacing: 6 }}>
+                {referralCode}
+              </p>
+            </div>
+            {/* Link */}
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
+              ventally.app/signup?ref={referralCode}
+            </p>
+          </div>
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Invite Friends, Earn Minutes</h2>
-        <p className="text-white/60 text-sm leading-relaxed">
-          Share your referral code with friends. When they sign up, you both get{' '}
-          <strong className="text-white">5 free minutes</strong>!
-        </p>
-      </GlassCard>
+      )}
 
-      {/* Referral Code */}
+      {/* Hero (collapsed to compact CTA when card is showing) */}
+      {!referralCode && !loading && (
+        <GlassCard bordered padding="lg" className="mb-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
+            <Gift size={32} className="text-primary" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Invite Friends, Earn Minutes</h2>
+          <p className="text-white/60 text-sm leading-relaxed">
+            Share your referral code with friends. When they sign up, you both get{' '}
+            <strong className="text-white">5 free minutes</strong>!
+          </p>
+        </GlassCard>
+      )}
+
+      {/* Referral Code + Action buttons */}
       <GlassCard bordered padding="lg" className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-3">Your Referral Code</p>
         {loading ? (
@@ -90,7 +164,7 @@ export const ReferralScreen = () => {
             </button>
           </div>
         )}
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3 mb-3">
           <Button
             variant="primary"
             fullWidth
@@ -105,11 +179,22 @@ export const ReferralScreen = () => {
             fullWidth
             leftIcon={<Share2 size={16} />}
             onClick={handleShare}
-            disabled={!referralLink || loading}
+            disabled={!referralCode || loading}
           >
             Share
           </Button>
         </div>
+        {/* Copy referral link row */}
+        <button
+          onClick={handleCopyLink}
+          disabled={!referralLink || loading}
+          className="w-full flex items-center justify-between bg-white/5 hover:bg-white/8 transition-colors rounded-xl px-4 py-3 disabled:opacity-40"
+        >
+          <span className="text-xs text-white/50 truncate">{referralLink || 'ventally.app/signup?ref=...'}</span>
+          {copiedLink
+            ? <Check size={14} className="text-green-400 flex-shrink-0 ml-2" />
+            : <Copy size={14} className="text-white/40 flex-shrink-0 ml-2" />}
+        </button>
       </GlassCard>
 
       {/* Stats */}

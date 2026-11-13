@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -14,15 +14,29 @@ import { AppBrandIcon } from '../../components/ui/AppBrandIcon';
 export const SignUpWeb = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
+
+  // Auto-fill referral / affiliate code from URL (?ref=CODE or ?aff=CODE)
+  const _urlRef = (() => {
+    try {
+      const p = new URLSearchParams(location.search);
+      return (p.get('ref') || p.get('aff') || '').toUpperCase().slice(0, 8);
+    } catch { return ''; }
+  })();
 
   const [form, setForm] = useState({
     email: '',
     password: '',
     nickname: '',
     userType: '' as 'venter' | 'listener' | '',
-    referralCode: '',
+    referralCode: _urlRef,
   });
+
+  // Keep in sync if the URL changes (e.g. user follows a share link)
+  useEffect(() => {
+    if (_urlRef) setForm(prev => ({ ...prev, referralCode: _urlRef }));
+  }, [_urlRef]);
   const [errors, setErrors] = useState<any>({});
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
@@ -110,6 +124,26 @@ export const SignUpWeb = () => {
         } catch {
           // Silent fail — referral is a bonus, not critical
         }
+      }
+
+      // Refersion conversion tracking — fire after successful registration
+      try {
+        const userId = data?.user?.id ?? data?.user?._id ?? '';
+        const refCode = form.referralCode.trim() || '';
+        // POST to Refersion REST conversion endpoint via our backend proxy
+        // so the API key stays server-side. Best-effort — never blocks signup.
+        await apiInstance.post('referrals/refersion-conversion', {
+          customer_id: userId,
+          email: form.email.trim(),
+          referral_code: refCode || undefined,
+        }).catch(() => {});
+        // Also fire the browser-side Refersion pixel if the global rfsn object was
+        // injected by the index.html <script> tag (Refersion's tracking snippet).
+        if (typeof (window as any).rfsn === 'object' && (window as any).rfsn.trackCheckout) {
+          (window as any).rfsn.trackCheckout({ id: userId, email: form.email.trim() });
+        }
+      } catch {
+        // Silent fail — Refersion is analytics, not critical path
       }
 
       navigate('/signup/otp', { state: { email: form.email.trim(), userType: form.userType } });
