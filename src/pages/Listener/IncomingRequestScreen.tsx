@@ -136,6 +136,11 @@ export const IncomingRequestScreen = () => {
 
   const isCall = requestType === 'call';
 
+  const ratePerMinute = requestData?.ratePerMinute;
+  const rateDisplay = ratePerMinute
+    ? `$${Number(ratePerMinute).toFixed(2)}/min`
+    : isCall ? '$0.15–$0.20/min' : '$0.15–$0.20/min';
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-6">
       <MainBackground />
@@ -210,6 +215,11 @@ export const IncomingRequestScreen = () => {
                 {isCall ? <Phone size={12} /> : <MessageSquare size={12} />}
                 <span>{isCall ? t('ListenerHome.callSession', 'Call Session') : t('ListenerHome.chatSession', 'Chat Session')}</span>
               </div>
+            </div>
+
+            {/* Payout rate badge */}
+            <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-green-500/15 border border-green-500/35">
+              <span className="text-green-400 text-sm font-semibold">💰 You earn {rateDisplay}</span>
             </div>
 
             {/* Accept / Decline buttons */}
