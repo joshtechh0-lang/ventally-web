@@ -331,7 +331,7 @@ export const VenterDashboard = () => {
         </div>
       </div>
 
-      {/* Low Balance Modal */}
+      {/* Low Wallet Modal */}
       {showNoPaymentModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
           <div className="glass rounded-2xl p-6 max-w-sm w-full text-center">
@@ -357,7 +357,7 @@ export const VenterDashboard = () => {
       {showLowBalanceModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
           <div className="glass rounded-2xl p-6 max-w-sm w-full text-center">
-            <h2 className="text-white text-xl font-bold mb-2">Low Balance</h2>
+            <h2 className="text-white text-xl font-bold mb-2">Low Wallet</h2>
             <p className="text-white/70 text-sm mb-6">You need minutes to start a session. Top up your balance to continue.</p>
             <div className="space-y-3">
               <button

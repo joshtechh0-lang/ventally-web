@@ -35,7 +35,7 @@ export const PaymentSuccessScreen = () => {
 
         {/* Updated Balance */}
         <GlassCard bordered padding="lg" className="mb-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-3">Your Balance</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-3">Your Wallet</p>
           {loading ? (
             <p className="text-white">Loading...</p>
           ) : (

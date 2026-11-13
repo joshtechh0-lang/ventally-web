@@ -13,29 +13,29 @@ import { toastSuccess, toastError } from '../../utils/toast';
 const TOP_UP_PACKS = [
   {
     id: 'voice_top_up',
-    name: 'Voice Top-Up',
+    name: 'Pay as you go — Voice',
     price: 19.99,
     minutes: 15,
     messages: 0,
-    description: 'Extend your call',
+    description: '$0.69/min · 15 voice minutes',
     icon: 'phone',
   },
   {
     id: 'text_top_up',
-    name: 'Text Top-Up',
+    name: 'Pay as you go — Chat',
     price: 14.99,
     minutes: 0,
     messages: 50,
-    description: 'Continue your conversation',
+    description: '$0.39/min · 50 chat messages',
     icon: 'message',
   },
   {
     id: 'support_boost',
-    name: 'Support Boost',
+    name: 'Pay as you go — Bundle',
     price: 34.99,
     minutes: 30,
     messages: 50,
-    description: 'Extra time when you need it',
+    description: 'Voice + chat · best value',
     icon: 'zap',
   },
 ];
@@ -95,8 +95,8 @@ export const VenterAddFunds = () => {
             )}
 
             <PageHeader
-                title="Top Up"
-                subtitle="Add more session time to continue"
+                title="Add to Wallet"
+                subtitle="Choose how you want to pay for your sessions"
                 onBack={() => navigate('/venter/wallet')}
             />
 

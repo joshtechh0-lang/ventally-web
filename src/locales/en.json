@@ -1591,7 +1591,7 @@
       "totalHappyDays_one": "You were happy for {{days}} day",
       "totalHappyDays_other": "You were happy for {{days}} days"
     },
-    "availableBalance": "Your Available Balance",
+    "availableBalance": "Your Available Wallet",
     "voiceMinutesRemaining": "voice minutes remaining",
     "textsRemaining": "texts remaining",
     "noBalance": "You have no voice minutes or texts available. Add more to start connecting.",
@@ -1827,7 +1827,7 @@
   "VenterPaymentCheck": {
     "title": "Session Payment",
     "insufficientTitle": "Insufficient Balance",
-    "yourBalance": "Your balance",
+    "yourBalance": "Your wallet",
     "callCost": "Voice session cost",
     "chatCost": "Chat session cost",
     "continue": "Continue",
@@ -1895,7 +1895,7 @@
   },
   "ListenerWallet": {
     "subtitle": "Payouts and session earnings",
-    "availableBalance": "Available Balance",
+    "availableBalance": "Available Wallet",
     "requestPayout": "Request Payout",
     "managePayout": "Payout Methods",
     "lifetimeEarnings": "Lifetime Earnings",
@@ -2089,7 +2089,7 @@
       "users": "User",
       "subAdmins": "Sub Admins",
       "reports": "Reports",
-      "wallet": "Balance"
+      "wallet": "Wallet"
     }
   },
   "Admin": {
@@ -2512,7 +2512,7 @@
     "wallet": {
       "title": "Wallet",
       "subtitle": "Wallet and transfers for Support Guides.",
-      "availableBalance": "Available Balance",
+      "availableBalance": "Available Wallet",
       "pendingBalance": "Pending Balance",
       "totalEarnings": "Lifetime total",
       "activityBreakdown": "Recent Activity",
@@ -2705,7 +2705,7 @@
     "noCaughtUp": "You're all caught up! No new notifications."
   },
   "Wallet": {
-    "title": "Balance",
+    "title": "Wallet",
     "addFunds": "Add Funds",
     "paymentMethods": "Payment Methods",
     "transactions": "Activity",

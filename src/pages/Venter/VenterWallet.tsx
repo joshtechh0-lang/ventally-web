@@ -69,7 +69,7 @@ export const VenterWallet = () => {
         {/* Balance Card */}
         <GlassCard bordered padding="lg" className="mb-6 text-center shadow-2xl shadow-black/20 lg:mb-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80 mb-4">
-            Your Balance
+            Your Wallet
           </p>
           <div className="flex justify-center gap-8 mb-6">
             <div className="text-center">
