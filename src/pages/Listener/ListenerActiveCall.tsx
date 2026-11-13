@@ -232,6 +232,10 @@ export const ListenerActiveCall = () => {
               {formatDuration(seconds)}
             </p>
           )}
+          {/* Rate display for listener */}
+          {callStatus === 'connected' && (
+            <p className="text-xs text-green-400/70 mt-1">💰 Earning per minute</p>
+          )}
         </div>
       </div>
 

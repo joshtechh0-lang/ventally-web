@@ -82,6 +82,9 @@ export const ActiveCall = () => {
   const [, setTick] = useState(0);
   const [showEndModal, setShowEndModal] = useState(false);
   const [showCrisisOverlay, setShowCrisisOverlay] = useState(false);
+  const [walletMinutes, setWalletMinutes] = useState<number | null>(null);
+  const [showLowMinutesWarning, setShowLowMinutesWarning] = useState(false);
+  const [lowMinutesDismissed, setLowMinutesDismissed] = useState(false);
   const [audioInputs, setAudioInputs] = useState<AudioDeviceInfo[]>([]);
   const [audioOutputs, setAudioOutputs] = useState<AudioDeviceInfo[]>([]);
   const callStatus: 'connecting' | 'connected' | 'ended' = isJoined ? 'connected' : 'connecting';
@@ -96,6 +99,23 @@ export const ActiveCall = () => {
     const interval = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(interval);
   }, [isJoined]);
+
+  // Fetch wallet balance on mount (venter only) so we can show 1-min warning
+  useEffect(() => {
+    if (role !== 'venter') return;
+    apiInstance.get('wallet/balance').then((res: any) => {
+      const mins = res?.data?.balance?.minutes ?? res?.data?.minutes ?? null;
+      if (mins !== null) setWalletMinutes(Math.floor(Number(mins)));
+    }).catch(() => {});
+  }, [role]);
+
+  // Show low-minutes warning when < 2 minutes remain and not dismissed
+  useEffect(() => {
+    if (role !== 'venter' || lowMinutesDismissed || walletMinutes === null) return;
+    if (walletMinutes < 2) {
+      setShowLowMinutesWarning(true);
+    }
+  }, [walletMinutes, role, lowMinutesDismissed]);
 
   // Session persists across navigation on all screen sizes.
   // The ActiveSessionBar (rendered in VenterLayout / ListenerLayout)
@@ -269,8 +289,36 @@ export const ActiveCall = () => {
               {formatDuration(duration)}
             </p>
           )}
+          {/* Rate display — venter sees cost, listener sees earnings */}
+          {callStatus === 'connected' && (
+            <p className="text-xs text-white/40 mt-1">
+              {role === 'venter' ? '$0.69/min · voice' : '💰 You earn per minute'}
+            </p>
+          )}
         </div>
       </div>
+
+      {/* 1-minute low-wallet warning */}
+      {showLowMinutesWarning && !lowMinutesDismissed && (
+        <div className="w-full max-w-sm mt-4 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-center animate-fade-in">
+          <p className="text-amber-300 font-semibold text-sm mb-1">⚠️ Less than 2 minutes remaining</p>
+          <p className="text-white/60 text-xs mb-3">Your wallet is running low. Add funds to keep going.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setLowMinutesDismissed(true); setShowLowMinutesWarning(false); }}
+              className="flex-1 py-2 rounded-xl glass border border-white/10 text-white text-xs font-medium hover:bg-white/10 transition-colors"
+            >
+              Keep talking
+            </button>
+            <button
+              onClick={() => setShowEndModal(true)}
+              className="flex-1 py-2 rounded-xl bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-medium hover:bg-amber-500/40 transition-colors"
+            >
+              Wrap up
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bottom controls card */}
       <GlassCard className="w-full max-w-sm mt-8" rounded="2xl" padding="lg">
