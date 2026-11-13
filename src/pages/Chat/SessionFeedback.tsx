@@ -50,7 +50,17 @@ export const SessionFeedback = () => {
   const [starRating, setStarRating] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [isSubscriber, setIsSubscriber] = useState(true); // assume subscriber until proven otherwise
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch subscription status (venter only) to decide whether to show upgrade offer
+  useEffect(() => {
+    if (role !== 'venter') return;
+    apiInstance.get('wallet/subscription').then((res: any) => {
+      const sub = res?.data?.subscription ?? res?.data;
+      setIsSubscriber(sub?.status === 'active');
+    }).catch(() => setIsSubscriber(false));
+  }, [role]);
 
   // Auto-navigate home 3s after thank-you shown — matches RN
   useEffect(() => {
@@ -120,24 +130,39 @@ export const SessionFeedback = () => {
   // ── Thank-you screen ──────────────────────────────────────────────────────
   if (showThankYou) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4 animate-fade-in"
-        onClick={() => navigate(`/${role}/home`, { replace: true })}
-      >
-        <GlassCard bordered className="w-full max-w-sm text-center py-12 cursor-pointer">
-          <div className="flex items-center justify-center gap-2">
-            <h2 className="text-xl font-semibold text-white">
-              {t('SessionRating.thankYouTitle')}
-            </h2>
-            <img
-              src={heartIcon}
-              alt="heart"
-              className="w-7 h-7 object-contain "
-              color='white'
-              // style={{ filter: 'brightness(0) saturate(100%) invert(40%) sepia(80%) saturate(600%) hue-rotate(320deg) brightness(110%)' }}
-            />
-          </div>
-        </GlassCard>
+      <div className="min-h-screen flex items-center justify-center px-4 animate-fade-in">
+        <div className="w-full max-w-sm space-y-4">
+          <GlassCard bordered className="w-full text-center py-12 cursor-pointer" onClick={() => navigate(`/${role}/home`, { replace: true })}>
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-xl font-semibold text-white">
+                {t('SessionRating.thankYouTitle')}
+              </h2>
+              <img src={heartIcon} alt="heart" className="w-7 h-7 object-contain" color='white' />
+            </div>
+          </GlassCard>
+          {/* Membership upgrade offer — shown to non-subscriber venters */}
+          {role === 'venter' && !isSubscriber && (
+            <GlassCard bordered className="w-full text-center py-5 px-5">
+              <p className="text-xs text-primary/80 font-semibold uppercase tracking-widest mb-1">Member plan</p>
+              <p className="text-base font-bold text-white mb-1">Unlimited support, every month</p>
+              <p className="text-xs text-white/55 mb-4">Rollover minutes · no per-session charge · priority matching</p>
+              <Button
+                variant="primary"
+                fullWidth
+                size="sm"
+                onClick={() => navigate('/venter/upgrade-plan')}
+              >
+                See membership plans
+              </Button>
+              <button
+                onClick={() => navigate(`/${role}/home`, { replace: true })}
+                className="mt-2 text-xs text-white/35 hover:text-white/60 transition-colors w-full"
+              >
+                Maybe later
+              </button>
+            </GlassCard>
+          )}
+        </div>
       </div>
     );
   }

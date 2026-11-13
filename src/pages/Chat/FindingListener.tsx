@@ -14,6 +14,9 @@ export const FindingListener = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const type = (location.state?.type || 'call') as 'call' | 'chat';
+  const paymentMode = (location.state?.paymentMode || 'payg') as 'member' | 'ad' | 'payg';
+  const stateBalance = location.state?.balance;
+  const stateSubscription = location.state?.subscription;
   const [status, setStatus] = useState<'searching' | 'found' | 'timeout' | 'lowBalance'>('searching');
   const [dots, setDots] = useState('');
   const [timerKey, setTimerKey] = useState(0);
@@ -219,6 +222,30 @@ export const FindingListener = () => {
 
         {status === 'searching' && (
           <div className='w-full flex flex-col items-center'>
+            {/* Payment mode pill */}
+            {paymentMode === 'member' && (() => {
+              const memberMins = stateBalance?.member_minutes ?? stateBalance?.minutes ?? 0;
+              const rolloverMins = stateBalance?.rollover_minutes ?? 0;
+              const total = Math.floor(memberMins + rolloverMins);
+              return (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-4 text-xs font-medium text-primary">
+                  <span>⏱</span>
+                  <span>Using {total} member minutes</span>
+                </div>
+              );
+            })()}
+            {paymentMode === 'ad' && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/15 border border-green-500/30 mb-4 text-xs font-medium text-green-400">
+                <span>🎁</span>
+                <span>Using your ad reward · {stateBalance?.ad_minutes ?? 0} free minutes</span>
+              </div>
+            )}
+            {paymentMode === 'payg' && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 border border-white/15 mb-4 text-xs font-medium text-white/70">
+                <span>💳</span>
+                <span>{isCall ? '$0.69/min · voice' : '$0.39/min · chat'}</span>
+              </div>
+            )}
             <h1 className="text-xl font-bold text-white mb-2">{isChat ? chatTitle : title}{dots}</h1>
             <p className="text-white/80 mb-3">
               {t('VenterFindingListener.description', "We're connecting you with an available listener for your {{type}} session.", { type })}

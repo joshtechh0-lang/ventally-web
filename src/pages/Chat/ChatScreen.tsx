@@ -41,6 +41,12 @@ export const ChatScreen = () => {
   const [showListenerCrisisModal, setShowListenerCrisisModal] = useState(false);
   const [showCrisisActivated, setShowCrisisActivated] = useState(false);
   const [isChatActive, setIsChatActive] = useState(true);
+  // Ad-minutes heads-up
+  const [adMinutes, setAdMinutes] = useState(0);
+  const [showAdWarning, setShowAdWarning] = useState(false);
+  const adWarningShown = useRef(false);
+  const sessionStartTime = useRef(Date.now());
+  const isVenterUser = currentUser?.userType === 'venter' || currentUser?.role === 'venter';
 
   // Get other participant info
   const getOtherName = () => {
@@ -231,6 +237,30 @@ export const ChatScreen = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Fetch ad_minutes for venter and set up warning timer
+  useEffect(() => {
+    if (!isVenterUser) return;
+    apiInstance.get('wallet/balance').then((res: any) => {
+      const bal = res?.data?.balance ?? res?.data ?? {};
+      const adMins = bal?.ad_minutes ?? 0;
+      setAdMinutes(adMins);
+    }).catch(() => {});
+  }, [isVenterUser]);
+
+  useEffect(() => {
+    if (!isVenterUser || adMinutes <= 0 || adWarningShown.current) return;
+    const interval = setInterval(() => {
+      const elapsedSeconds = (Date.now() - sessionStartTime.current) / 1000;
+      const remainingSeconds = (adMinutes * 60) - elapsedSeconds;
+      if (remainingSeconds <= 120 && !adWarningShown.current) {
+        adWarningShown.current = true;
+        setShowAdWarning(true);
+        clearInterval(interval);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [isVenterUser, adMinutes]);
+
   const sendMessage = useCallback(async () => {
     if (!input.trim() || !id) return;
 
@@ -403,6 +433,17 @@ export const ChatScreen = () => {
 
       {/* Input - only shown when chat is active, matching mobile */}
       {isChatActive && (
+        {/* Ad-minutes warning banner */}
+        {showAdWarning && isVenterUser && adMinutes > 0 && (
+          <div className="border-t border-amber-500/30 bg-amber-500/10 px-4 py-2.5 flex items-start gap-2 flex-shrink-0">
+            <span className="text-base mt-0.5">⚠️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-amber-300">About 2 minutes of free time remaining</p>
+              <p className="text-xs text-white/55">Your ad reward is almost up. Add funds to keep going.</p>
+            </div>
+            <button onClick={() => setShowAdWarning(false)} className="text-white/30 hover:text-white/60 text-sm flex-shrink-0">✕</button>
+          </div>
+        )}
         <div className="glass border-t border-white/8 px-4 sm:px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] flex items-end gap-3 flex-shrink-0 lg:rounded-b-3xl">
           <GlassCard
             className="flex-1"

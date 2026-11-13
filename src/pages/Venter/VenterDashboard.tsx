@@ -157,12 +157,19 @@ export const VenterDashboard = () => {
     }
   };
 
+  const getPaymentMode = () => {
+    if (subscription?.status === 'active') return 'member';
+    if ((balance?.ad_minutes ?? 0) > 0) return 'ad';
+    if ((balance?.currency ?? 0) > 0 || balance?.hasPaymentMethod) return 'payg';
+    return 'payg';
+  };
+
   const handleCall = () => {
-    navigate('/venter/finding-listener', { state: { type: 'call' } });
+    navigate('/venter/finding-listener', { state: { type: 'call', paymentMode: getPaymentMode(), balance, subscription } });
   };
 
   const handleChat = () => {
-    navigate('/venter/finding-listener', { state: { type: 'chat' } });
+    navigate('/venter/finding-listener', { state: { type: 'chat', paymentMode: getPaymentMode(), balance, subscription } });
   };
 
   return (
