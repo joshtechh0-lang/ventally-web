@@ -355,7 +355,7 @@ export const VenterDashboard = () => {
                 <div className="space-y-3">
                   {/* Try for free banner */}
                   <button
-                    onClick={() => navigate('/venter/wallet/add-funds')}
+                    onClick={() => navigate('/venter/watch-ads')}
                     className="w-full flex items-center gap-3 p-4 rounded-2xl glass border border-white/10 hover:bg-white/10 transition-colors"
                   >
                     <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">

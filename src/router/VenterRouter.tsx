@@ -44,6 +44,7 @@ import { VenterSubmitFeedback } from '../pages/Venter/VenterSubmitFeedback';
 import { VenterChangeAccountType } from '../pages/Venter/VenterChangeAccountType';
 import { VenterChoosePlan } from '../pages/Venter/VenterChoosePlan';
 import { VenterOthers } from '../pages/Venter/VenterOthers';
+import { VenterWatchAds } from '../pages/Venter/VenterWatchAds';
 
 // Common Pages
 import { ProfileScreen } from '../pages/Common/ProfileScreen';
@@ -99,6 +100,7 @@ export const VenterRouter = () => {
         <Route path="home" element={<VenterDashboard />} />
         <Route path="wallet" element={<VenterWallet />} />
         <Route path="wallet/add-funds" element={<VenterAddFunds />} />
+        <Route path="watch-ads" element={<VenterWatchAds />} />
         <Route path="wallet/payment-success" element={<PaymentSuccessScreen />} />
         <Route path="wallet/transactions" element={<VenterTransactions />} />
         <Route path="mood" element={<VenterMoods />} />
