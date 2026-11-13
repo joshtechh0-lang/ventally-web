@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Phone, MessageSquare, ChevronRight, Bell } from 'lucide-react';
+import { Phone, MessageSquare, ChevronRight, Bell, Gift } from 'lucide-react';
 import type { RootState } from '../../store/store';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
@@ -319,6 +319,20 @@ export const VenterDashboard = () => {
                 )}
               </GlassCard>
             </div>
+
+            {/* Refer & Earn Card */}
+            <GlassCard hover onClick={() => navigate('/venter/referral')} className="cursor-pointer mt-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Gift size={18} className="text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-white">Refer & Earn</p>
+                  <p className="text-xs text-white/50">Give $5, get $5 · share your code</p>
+                </div>
+                <ChevronRight size={16} className="text-white/30" />
+              </div>
+            </GlassCard>
 
             {/* Mood Chart Section */}
             {chartData.length > 0 && (

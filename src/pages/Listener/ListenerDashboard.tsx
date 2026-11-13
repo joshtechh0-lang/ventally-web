@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { useAvailability } from '../../api/hooks/useAvailability';
 import { setAvailability } from '../../store/slices/listenerSlice';
 import type { RootState } from '../../store/store';
-import { Phone, MessageSquare, ChevronRight, Bell, Sparkles, Wallet } from 'lucide-react';
+import { Phone, MessageSquare, ChevronRight, Bell, Sparkles, Wallet, Gift } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { toastError } from '../../utils/toast';
 import { getUnreadNotificationCount } from '../../api/notificationsApi';
@@ -375,6 +375,30 @@ export const ListenerDashboard = () => {
               <p className="text-sm font-medium text-gray-300">
                 {t('ListenerHome.sessionHistory', 'Session History')}
               </p>
+            </GlassCard>
+            <GlassCard
+              hover
+              onClick={() => navigate('/listener/referral')}
+              padding="md"
+              rounded="2xl"
+              className="flex items-center gap-3 cursor-pointer"
+            >
+              <div className="w-10 h-10 glass rounded-2xl flex items-center justify-center text-accent">
+                <Gift size={18} />
+              </div>
+              <p className="text-sm font-medium text-gray-300">Refer & Earn</p>
+            </GlassCard>
+            <GlassCard
+              hover
+              onClick={() => navigate('/listener/affiliate')}
+              padding="md"
+              rounded="2xl"
+              className="flex items-center gap-3 cursor-pointer"
+            >
+              <div className="w-10 h-10 glass rounded-2xl flex items-center justify-center text-accent">
+                <Sparkles size={18} />
+              </div>
+              <p className="text-sm font-medium text-gray-300">Affiliate Program</p>
             </GlassCard>
           </div>
         </section>

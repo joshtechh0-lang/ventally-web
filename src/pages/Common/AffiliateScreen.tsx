@@ -178,12 +178,38 @@ export const AffiliateScreen = () => {
         </div>
       </GlassCard>
 
+      {/* Reward Breakdown */}
+      <GlassCard bordered padding="lg" className="mb-6">
+        <p className="text-sm font-semibold text-white mb-4">Reward Breakdown</p>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[
+            { label: 'Pending', value: stats?.pending_rewards ?? 0, color: 'text-amber-400' },
+            { label: 'Approved', value: stats?.approved_rewards ?? 0, color: 'text-blue-400' },
+            { label: 'Paid Out', value: stats?.paid_rewards ?? 0, color: 'text-green-400' },
+          ].map(item => (
+            <div key={item.label} className="bg-white/5 rounded-xl p-3 text-center">
+              <p className={`text-xl font-bold ${item.color}`}>{loading ? '—' : item.value}</p>
+              <p className="text-xs text-white/40 mt-1">{item.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="bg-green-500/10 border border-green-500/25 rounded-xl px-4 py-3">
+          <p className="text-xs text-green-300/80">
+            💰 Each approved referral earns you a <strong className="text-green-300">$3 credit</strong> added to your wallet. Paid conversions trigger weekly payouts.
+          </p>
+        </div>
+      </GlassCard>
+
       {/* Commission Info */}
       <GlassCard bordered padding="lg">
         <p className="text-sm font-semibold text-white mb-4">Commission Details</p>
         <div className="space-y-3">
           <div className="flex justify-between">
-            <p className="text-sm text-white/60">Commission per signup</p>
+            <p className="text-sm text-white/60">Reward per approved referral</p>
+            <p className="text-sm font-semibold text-green-400">$3.00 credit</p>
+          </div>
+          <div className="flex justify-between">
+            <p className="text-sm text-white/60">Commission per paid conversion</p>
             <p className="text-sm font-semibold text-white">${Number(stats?.commission_value || 5).toFixed(2)}</p>
           </div>
           <div className="flex justify-between">
