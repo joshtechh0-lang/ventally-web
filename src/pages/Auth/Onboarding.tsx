@@ -11,6 +11,21 @@ import { Sparkles, Shield, Heart, MessageCircle } from 'lucide-react';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.ventally';
 const APP_STORE_URL = 'https://apps.apple.com/us/app/ventally/id6794718001';
 
+const VENTER_FEATURES = [
+  { icon: '🎙️', title: 'Talk as long as you need', desc: 'Sessions aren\'t time-limited. Minutes are only deducted while you\'re on a live call — you stay in control.' },
+  { icon: '🔍', title: 'Find a Support Guide', desc: 'Browse available guides and tap Connect. When one accepts, the call begins instantly.' },
+  { icon: '💳', title: 'Simple pay-as-you-go', desc: 'Top up your wallet with any amount. No subscriptions required, though membership plans give better rates.' },
+  { icon: '🔒', title: '100% anonymous', desc: 'Your Support Guide never sees your real name, photo, or contact details. Vent freely.' },
+  { icon: '🤝', title: 'Refer friends, earn credits', desc: 'Share your referral link. When friends join and top up, you both get wallet credits.' },
+];
+
+const LISTENER_FEATURES = [
+  { icon: '📲', title: 'You receive incoming calls', desc: 'Users request to connect with you. You accept or decline — calls are never assigned without your consent.' },
+  { icon: '⏱️', title: 'Sessions run as long as needed', desc: 'No fixed length. You earn per minute for every active minute on the call. Longer sessions = more earnings.' },
+  { icon: '💰', title: 'Weekly payouts via Stripe', desc: 'Earnings accumulate per session and are paid weekly directly to your bank account via Stripe.' },
+  { icon: '🌐', title: 'Affiliate & referral bonuses', desc: 'Share your unique link with potential Support Guides. When they get approved, you earn a referral bonus.' },
+];
+
 export const Onboarding = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -98,6 +113,50 @@ export const Onboarding = () => {
                   <p className="text-xs text-white/40 font-medium">— {t.name}</p>
                 </div>
               ))}
+            </div>
+          </section>
+
+          {/* Role-split how-it-works */}
+          <section className="mb-6 w-full sm:mb-8">
+            <p className="text-center text-xs font-semibold uppercase tracking-wider text-white/40 mb-4">How it works for you</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Venter column */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">💬</span>
+                  <span className="text-sm font-semibold text-white">Getting Support</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {VENTER_FEATURES.map((f) => (
+                    <div key={f.title} className="bg-white/5 border border-white/8 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-base">{f.icon}</span>
+                        <span className="text-xs font-semibold text-white">{f.title}</span>
+                      </div>
+                      <p className="text-[11px] text-white/55 leading-relaxed">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Listener column */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">🎧</span>
+                  <span className="text-sm font-semibold text-white">Being a Support Guide</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {LISTENER_FEATURES.map((f) => (
+                    <div key={f.title} className="bg-white/5 border border-white/8 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-base">{f.icon}</span>
+                        <span className="text-xs font-semibold text-white">{f.title}</span>
+                      </div>
+                      <p className="text-[11px] text-white/55 leading-relaxed">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 
