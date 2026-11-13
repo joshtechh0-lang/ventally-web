@@ -22,6 +22,7 @@ export const VenterDashboard = () => {
   const { t } = useTranslation();
   const { getWallet, getMySubscription } = useWallet();
   const [balance, setBalance] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
   const [showNoPaymentModal, setShowNoPaymentModal] = useState(false);
   const [showLowBalanceModal, setShowLowBalanceModal] = useState(false);
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ export const VenterDashboard = () => {
     fetchData();
   }, []);
 
-  // Fetch wallet balance on mount
+  // Fetch wallet balance and subscription on mount
   useEffect(() => {
     getWallet().then((res: any) => {
       const balanceData = res?.balance ?? res?.data?.balance ?? null;
@@ -115,6 +116,9 @@ export const VenterDashboard = () => {
       if (minutes < 5 && minutes > 0) {
         setShowLowBalanceModal(true);
       }
+    }).catch(() => {});
+    getMySubscription().then((res: any) => {
+      setSubscription(res?.subscription ?? res?.data?.subscription ?? null);
     }).catch(() => {});
   }, []);
 
@@ -213,35 +217,133 @@ export const VenterDashboard = () => {
               {t('VenterHome.yourReflection')}
             </Button>
 
-            {/* Let's Vent Section */}
+            {/* Start a Session — 3 states: subscriber / PAYG / ad user */}
             <div>
               <div className="flex items-center justify-between mb-3 lg:mb-3.5">
-                <p className="text-sm font-semibold text-white">{t('VenterHome.letsVent')}</p>
+                <p className="text-sm font-semibold text-white">Start a session</p>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-xs text-white/60">
-                    {'Support is available 24/7'}
-                  </span>
+                  <span className="text-xs text-white/60">Support available 24/7</span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 lg:gap-4">
-                <Button
-                  variant="glass"
-                  fullWidth
-                  onClick={handleCall}
-                  className="justify-center !w-full text-xs sm:text-sm"
-                >
-                  📞 Voice Session
-                </Button>
-                <Button
-                  variant="glass"
-                  fullWidth
-                  onClick={handleChat}
-                  className="justify-center !w-full text-xs sm:text-sm"
-                >
-                  💬 Chat Session
-                </Button>
-              </div>
+
+              {/* Subscriber state */}
+              {subscription?.status === 'active' && (() => {
+                const memberMinutes = balance?.member_minutes ?? balance?.minutes ?? 0;
+                const rolloverMinutes = balance?.rollover_minutes ?? 0;
+                const totalMinutes = Math.floor(memberMinutes + rolloverMinutes);
+                const nextRefill = subscription?.current_period_end
+                  ? new Date(subscription.current_period_end).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })
+                  : null;
+                return (
+                  <div className="space-y-3">
+                    {/* Member minutes breakdown */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="text-2xl">⏱</div>
+                      <div className="flex-1">
+                        <p className="text-base font-bold text-white">
+                          {loading ? '—' : `${totalMinutes} minutes available`}
+                        </p>
+                        {!loading && (rolloverMinutes > 0 ? (
+                          <p className="text-xs text-white/50">
+                            {memberMinutes} new this month + {rolloverMinutes} rolled over
+                          </p>
+                        ) : (
+                          <p className="text-xs text-white/50">Member minutes · renews {nextRefill ?? 'soon'}</p>
+                        ))}
+                        {!loading && totalMinutes === 0 && nextRefill && (
+                          <p className="text-xs text-amber-400/80 mt-0.5">Next refill {nextRefill} · pay-as-you-go available</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button variant="glass" fullWidth onClick={handleCall} className="justify-center !w-full text-xs sm:text-sm">
+                        📞 Start voice
+                      </Button>
+                      <Button variant="glass" fullWidth onClick={handleChat} className="justify-center !w-full text-xs sm:text-sm">
+                        💬 Start chat
+                      </Button>
+                    </div>
+                    <p className="text-xs text-white/35 text-center">Uses your member minutes</p>
+                  </div>
+                );
+              })()}
+
+              {/* PAYG state (no active sub, has balance or payment method) */}
+              {(!subscription || subscription?.status !== 'active') && ((balance?.currency ?? 0) > 0 || balance?.hasPaymentMethod) && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={handleCall}
+                      className="flex flex-col items-center justify-center gap-1 p-4 rounded-2xl glass border border-white/10 hover:bg-white/10 transition-colors"
+                    >
+                      <span className="text-xl">📞</span>
+                      <span className="text-sm font-semibold text-white">Start voice</span>
+                      <span className="text-xs text-white/50">$0.69/min</span>
+                    </button>
+                    <button
+                      onClick={handleChat}
+                      className="flex flex-col items-center justify-center gap-1 p-4 rounded-2xl glass border border-white/10 hover:bg-white/10 transition-colors"
+                    >
+                      <span className="text-xl">💬</span>
+                      <span className="text-sm font-semibold text-white">Start chat</span>
+                      <span className="text-xs text-white/50">$0.39/min</span>
+                    </button>
+                  </div>
+                  {/* Ad reward if available */}
+                  {(balance?.ad_minutes ?? 0) > 0 && (
+                    <button
+                      onClick={handleCall}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-green-500/10 border border-green-500/25 hover:bg-green-500/15 transition-colors"
+                    >
+                      <span className="text-lg">🎁</span>
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-green-300">Use your reward</p>
+                        <p className="text-xs text-white/50">{balance.ad_minutes} free minutes earned</p>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Ad user state (no sub, no balance, no payment method) */}
+              {(!subscription || subscription?.status !== 'active') && !((balance?.currency ?? 0) > 0 || balance?.hasPaymentMethod) && (
+                <div className="space-y-3">
+                  {/* Try for free banner */}
+                  <button
+                    onClick={() => navigate('/venter/wallet/add-funds')}
+                    className="w-full flex items-center gap-3 p-4 rounded-2xl glass border border-white/10 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">▶</span>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold text-white">Try 5 minutes free</p>
+                      <p className="text-xs text-white/50">Watch 3 ads to unlock your first session</p>
+                    </div>
+                    <span className="text-white/30 text-lg">›</span>
+                  </button>
+                  {/* PAYG options below */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={handleCall}
+                      className="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl glass border border-white/8 hover:bg-white/8 transition-colors"
+                    >
+                      <span className="text-lg">📞</span>
+                      <span className="text-xs font-semibold text-white">Start voice</span>
+                      <span className="text-xs text-white/40">$0.69/min</span>
+                    </button>
+                    <button
+                      onClick={handleChat}
+                      className="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl glass border border-white/8 hover:bg-white/8 transition-colors"
+                    >
+                      <span className="text-lg">💬</span>
+                      <span className="text-xs font-semibold text-white">Start chat</span>
+                      <span className="text-xs text-white/40">$0.39/min</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Mood Check In */}
@@ -298,22 +400,45 @@ export const VenterDashboard = () => {
                 />
               )}
 
-              {/* Available Balance Card */}
-              <GlassCard bordered className="mt-3">
-                <p className="text-sm font-semibold text-white mb-2">{t('VenterHome.availableBalance', 'Your Available Balance')}</p>
-                {(balance?.minutes ?? 0) > 0 ? (
+              {/* Your Wallet card */}
+              <GlassCard bordered className="mt-3" onClick={() => navigate('/venter/wallet')} hover>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-semibold text-white">Your Wallet</p>
+                  <span className="text-xs text-primary cursor-pointer">View →</span>
+                </div>
+                {loading ? (
+                  <div className="skeleton h-8 rounded-xl" />
+                ) : subscription?.status === 'active' ? (
                   <div className="space-y-1">
-                    <p className="text-sm text-white">📞 <span className="font-semibold">{balance.minutes}</span> {t('VenterHome.voiceMinutesRemaining', 'voice minutes remaining')}</p>
-                    <p className="text-sm text-white">💬 <span className="font-semibold">{balance.minutes}</span> {t('VenterHome.textsRemaining', 'texts remaining')}</p>
+                    {((balance?.member_minutes ?? balance?.minutes ?? 0) + (balance?.rollover_minutes ?? 0)) > 0 ? (
+                      <>
+                        <p className="text-sm text-white">⏱ <span className="font-semibold">{Math.floor((balance?.member_minutes ?? balance?.minutes ?? 0) + (balance?.rollover_minutes ?? 0))}</span> member minutes</p>
+                        {(balance?.rollover_minutes ?? 0) > 0 && (
+                          <p className="text-xs text-white/50 pl-5">🔄 {balance.rollover_minutes} rolled over from last month</p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-white/60">No minutes remaining · refills soon</p>
+                    )}
+                    {(balance?.referral_credits ?? 0) > 0 && (
+                      <p className="text-sm text-white">🎁 <span className="font-semibold">${Number(balance.referral_credits).toFixed(2)}</span> referral credits</p>
+                    )}
+                  </div>
+                ) : (balance?.currency ?? 0) > 0 ? (
+                  <div className="space-y-1">
+                    <p className="text-sm text-white">💳 <span className="font-semibold">${Number(balance.currency).toFixed(2)}</span> available</p>
+                    {(balance?.referral_credits ?? 0) > 0 && (
+                      <p className="text-sm text-white">🎁 <span className="font-semibold">${Number(balance.referral_credits).toFixed(2)}</span> referral credits</p>
+                    )}
                   </div>
                 ) : (
-                  <div>
-                    <p className="text-sm text-white/70 mb-3">{t('VenterHome.noBalance', 'You have no voice minutes or texts available. Add more to start connecting.')}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-white/60">No funds · add to start a session</p>
                     <button
-                      onClick={() => navigate('/venter/wallet/add-funds')}
-                      className="px-4 py-2 bg-primary hover:bg-primary-hover transition-colors text-white text-xs font-semibold rounded-lg"
+                      onClick={e => { e.stopPropagation(); navigate('/venter/wallet/add-funds'); }}
+                      className="px-3 py-1.5 bg-primary hover:bg-primary-hover transition-colors text-white text-xs font-semibold rounded-lg"
                     >
-                      {t('VenterHome.addMinutesAndTexts', 'Add Minutes & Texts')}
+                      Add funds
                     </button>
                   </div>
                 )}

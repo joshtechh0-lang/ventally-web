@@ -12,9 +12,10 @@ export const VenterWallet = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { getWallet, getTransactions } = useWallet();
+  const { getWallet, getTransactions, getMySubscription } = useWallet();
 
   const [balance, setBalance] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,12 +23,14 @@ export const VenterWallet = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [balRes, txRes] = await Promise.allSettled([
+        const [balRes, txRes, subRes] = await Promise.allSettled([
           getWallet(),
           getTransactions(5, 0),
+          getMySubscription(),
         ]);
         if (balRes.status === 'fulfilled') setBalance(balRes.value?.balance);
         if (txRes.status === 'fulfilled') setTransactions(txRes.value?.transactions ?? []);
+        if (subRes.status === 'fulfilled') setSubscription(subRes.value?.subscription ?? null);
       } catch {
         toastError(t('Common.errors.fetchingData'));
       } finally {
@@ -66,27 +69,49 @@ export const VenterWallet = () => {
           </h1>
         </header>
 
-        {/* Balance Card */}
+        {/* Wallet Balance Card */}
         <GlassCard bordered padding="lg" className="mb-6 text-center shadow-2xl shadow-black/20 lg:mb-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80 mb-4">
             Your Wallet
           </p>
-          <div className="flex justify-center gap-8 mb-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold text-white tabular-nums tracking-tight sm:text-5xl">
-                {loading ? '-' : minutes}
-              </p>
-              <p className="text-xs text-white/60 mt-1">minutes</p>
+          {subscription?.status === 'active' ? (() => {
+            const memberMins = balance?.member_minutes ?? minutes;
+            const rolloverMins = balance?.rollover_minutes ?? 0;
+            const total = Math.floor(memberMins + rolloverMins);
+            return (
+              <div className="mb-6">
+                <p className="text-5xl font-bold text-white tabular-nums tracking-tight sm:text-6xl">{loading ? '—' : total}</p>
+                <p className="text-xs text-white/60 mt-1">member minutes</p>
+                {!loading && rolloverMins > 0 && (
+                  <p className="text-xs text-white/40 mt-1">🔄 {rolloverMins} rolled over from last month</p>
+                )}
+                {(balance?.referral_credits ?? 0) > 0 && (
+                  <p className="text-xs text-primary/80 mt-2">🎁 ${Number(balance.referral_credits).toFixed(2)} referral credits</p>
+                )}
+                <p className="text-xs text-white/35 mt-3">Unused minutes roll over to next month</p>
+              </div>
+            );
+          })() : (
+            <div className="flex justify-center gap-8 mb-6">
+              <div className="text-center">
+                <p className="text-4xl font-bold text-white tabular-nums tracking-tight sm:text-5xl">
+                  {loading ? '-' : minutes}
+                </p>
+                <p className="text-xs text-white/60 mt-1">minutes</p>
+              </div>
+              {messages > 0 && (
+                <>
+                  <div className="w-px bg-white/20" />
+                  <div className="text-center">
+                    <p className="text-4xl font-bold text-white tabular-nums tracking-tight sm:text-5xl">
+                      {loading ? '-' : messages}
+                    </p>
+                    <p className="text-xs text-white/60 mt-1">messages</p>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="w-px bg-white/20" />
-            <div className="text-center">
-              <p className="text-4xl font-bold text-white tabular-nums tracking-tight sm:text-5xl">
-                {loading ? '-' : messages}
-              </p>
-              <p className="text-xs text-white/60 mt-1">messages</p>
-            </div>
-          </div>
-          <p className="text-xs text-white/40 mb-4">🔄 Unused membership minutes roll over to next month</p>
+          )}
           <div className="w-full max-w-sm mx-auto">
             <Button
               variant="glass"

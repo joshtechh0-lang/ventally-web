@@ -1726,8 +1726,8 @@
     "endSessionNo": "No",
     "endSessionYes": "Yes",
     "lowCreditWarning": {
-      "title": "Balance Reminder",
-      "description": "Your balance is low\nAdd funds to continue",
+      "title": "Wallet Reminder",
+      "description": "Your wallet is running low\nAdd funds to continue",
       "button": "Add Funds"
     },
     "recentChats": {
@@ -1826,7 +1826,7 @@
   },
   "VenterPaymentCheck": {
     "title": "Session Payment",
-    "insufficientTitle": "Insufficient Balance",
+    "insufficientTitle": "Insufficient Wallet Balance",
     "yourBalance": "Your wallet",
     "callCost": "Voice session cost",
     "chatCost": "Chat session cost",
@@ -1835,7 +1835,7 @@
     "insufficientMessage": "You need 10 for this session. Add funds to your wallet to continue."
   },
   "VenterNoCredit": {
-    "title": "No Balance",
+    "title": "No Funds",
     "description": "Add funds or choose a plan to continue.",
     "addCredit": "Add Funds",
     "upgradePlan": "Upgrade Plan"
