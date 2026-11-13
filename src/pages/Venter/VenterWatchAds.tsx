@@ -6,6 +6,32 @@ import { GlassCard } from '../../components/ui/GlassCard';
 import { toastSuccess, toastError } from '../../utils/toast';
 import apiInstance from '../../api/apiInstance';
 
+// ---------------------------------------------------------------------------
+// AdSense banner — renders a Google display ad unit inside the ad player box.
+// Replace the data-ad-* values with your real slot from adsense.google.com.
+// ---------------------------------------------------------------------------
+declare global { interface Window { adsbygoogle: unknown[] } }
+
+function AdSenseBanner() {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch {}
+  }, []);
+  return (
+    <ins
+      ref={ref as any}
+      className="adsbygoogle"
+      style={{ display: 'block', width: '100%', minHeight: 250 }}
+      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"   // TODO: replace with real publisher ID
+      data-ad-slot="XXXXXXXXXX"                   // TODO: replace with real ad slot
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    />
+  );
+}
+
 const AD_COUNT = 3;
 const AD_DURATION = 30; // seconds per ad (simulated)
 const STORAGE_KEY = 'ventally_ad_progress';
@@ -137,17 +163,24 @@ export const VenterWatchAds = () => {
         <GlassCard bordered padding="lg" className="mb-6 text-center">
           {watching ? (
             <>
-              {/* Simulated ad player */}
-              <div className="w-full aspect-video rounded-2xl mb-4 flex items-center justify-center overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-3xl">▶</span>
-                  </div>
-                  <p className="text-white/60 text-sm">Ad playing…</p>
-                  <p className="text-white font-bold text-2xl mt-2">{countdown}s</p>
-                </div>
+              {/* Google AdSense ad unit — shown during the countdown */}
+              <div className="w-full rounded-2xl mb-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', minHeight: 250 }}>
+                <AdSenseBanner />
               </div>
-              <p className="text-xs text-white/40">Please watch to the end to earn credit</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-white/40">Ad {adsWatched + 1} of {AD_COUNT} — please keep this page open</p>
+                <p className="text-white font-bold text-lg tabular-nums">{countdown}s</p>
+              </div>
+              {/* Countdown progress bar */}
+              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div
+                  className="h-full rounded-full transition-none"
+                  style={{
+                    width: `${((AD_DURATION - countdown) / AD_DURATION) * 100}%`,
+                    background: 'linear-gradient(90deg,#7c3aed,#a855f7)',
+                  }}
+                />
+              </div>
             </>
           ) : (
             <>
