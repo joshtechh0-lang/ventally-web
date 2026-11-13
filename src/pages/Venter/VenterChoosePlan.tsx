@@ -239,6 +239,14 @@ export const VenterChoosePlan = () => {
                           <p>{t(plan.messagesKey)}</p>
                         )}
                       </div>
+
+                      {/* Membership perks — only for paid plans */}
+                      {price > 0 && (
+                        <div className="mt-3 pt-2.5 border-t border-white/10 space-y-0.5">
+                          <p className="text-xs text-white/55">🎯 60 ad-free minutes/month included</p>
+                          <p className="text-xs text-white/55">🔄 Unused minutes roll over to next month</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Radio Button */}
@@ -281,13 +289,38 @@ export const VenterChoosePlan = () => {
       </div>
 
       {/* Continue */}
-      <div className="mt-auto pt-6 pb-4 max-w-2xl mx-auto w-full">
-        <button 
+      <div className="mt-auto pt-4 pb-4 max-w-2xl mx-auto w-full">
+        {/* Trust bar */}
+        {!loading && (
+          <div className="flex justify-center gap-5 mb-3 text-xs text-white/40 font-medium">
+            <span>✓ Cancel anytime</span>
+            <span>✓ No hidden fees</span>
+            <span>✓ Secure</span>
+          </div>
+        )}
+
+        {/* BNPL placeholder — annual only */}
+        {!loading && planType === 'annual' && selectedPlan && (() => {
+          const sel = plans.find(p => p.id === selectedPlan);
+          return sel && sel.annualPrice > 0 ? (
+            <div className="mb-3 py-2 px-4 rounded-xl text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)' }}>
+              <p className="text-xs text-white/40">💳 Buy now, pay later coming soon — split your annual plan into monthly installments.</p>
+            </div>
+          ) : null;
+        })()}
+
+        <button
           onClick={handleContinue}
           disabled={!selectedPlan || checkoutLoading || loading}
           className="btn btn-primary w-full h-[56px] flex items-center justify-center gap-2 text-base font-bold"
         >
-          {checkoutLoading ? <Loader2 size={24} className="animate-spin" /> : t('ChoosePlan.continue')}
+          {checkoutLoading ? (
+            <Loader2 size={24} className="animate-spin" />
+          ) : !loading && selectedPlan ? (
+            planType === 'annual' ? 'Pay $240 for one year →' : 'Subscribe for $25/month →'
+          ) : (
+            t('ChoosePlan.continue')
+          )}
         </button>
       </div>
 
