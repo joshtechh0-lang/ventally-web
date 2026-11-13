@@ -219,7 +219,7 @@ export const ChoosePlan = () => {
         >
           {t('ChoosePlan.annual')}
           <span className="bg-[#C2AEBF] text-black text-[10px] font-bold px-2 py-0.5 rounded">
-            {t('ChoosePlan.savePercent')}
+            Save $60/year
           </span>
         </button>
       </div>
@@ -282,7 +282,7 @@ export const ChoosePlan = () => {
                       <div className="mb-2">
                         <p className="text-xl font-bold text-white">{priceText}</p>
                         {monthlyEquivalent && (
-                          <p className="text-xs text-white/50">billed ${price.toFixed(2)} annually</p>
+                          <p className="text-xs text-white/50">billed ${price.toFixed(2)} annually · Save $60 vs monthly</p>
                         )}
                       </div>
                     )}
@@ -297,6 +297,13 @@ export const ChoosePlan = () => {
                       )}
                       {!!plan.messagesKey && !!t(plan.messagesKey) && (
                         <p>{t(plan.messagesKey)}</p>
+                      )}
+                      {/* Membership perks — shown for any paid plan */}
+                      {price > 0 && (
+                        <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                          <p className="text-white/70 text-xs">🎯 60 ad-free minutes/month included</p>
+                          <p className="text-white/70 text-xs">🔄 Unused minutes roll over to next month</p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -348,13 +355,28 @@ export const ChoosePlan = () => {
         </div>
       )}
 
+      {/* BNPL placeholder — annual only */}
+      {!loading && planType === 'annual' && selectedPlan && (
+        <div className="mb-4 p-3 rounded-xl bg-white/5 border border-white/10 text-center">
+          <p className="text-xs text-white/50">
+            💳 Buy now, pay later options coming soon — split your annual plan into monthly installments.
+          </p>
+        </div>
+      )}
+
       {/* Continue */}
-      <button 
+      <button
         onClick={handleContinue}
         disabled={!selectedPlan || checkoutLoading || loading}
         className="btn btn-primary w-full h-[56px] flex items-center justify-center gap-2"
       >
-        {checkoutLoading ? <Loader2 size={24} className="animate-spin" /> : 'Start 7-Day Free Trial →'}
+        {checkoutLoading ? (
+          <Loader2 size={24} className="animate-spin" />
+        ) : planType === 'annual' ? (
+          'Pay $240 for one year →'
+        ) : (
+          'Subscribe for $25/month →'
+        )}
       </button>
     </>
   );

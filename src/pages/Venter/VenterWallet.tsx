@@ -86,6 +86,7 @@ export const VenterWallet = () => {
               <p className="text-xs text-white/60 mt-1">messages</p>
             </div>
           </div>
+          <p className="text-xs text-white/40 mb-4">🔄 Unused membership minutes roll over to next month</p>
           <div className="w-full max-w-sm mx-auto">
             <Button
               variant="glass"
@@ -93,7 +94,7 @@ export const VenterWallet = () => {
               fullWidth
               onClick={() => navigate('/venter/wallet/add-funds')}
             >
-              Top Up Minutes
+              Add to Wallet
             </Button>
           </div>
         </GlassCard>
