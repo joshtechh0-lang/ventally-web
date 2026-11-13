@@ -12,6 +12,7 @@ import { Phone, MessageSquare, ChevronRight, Bell, Sparkles, Wallet, Gift } from
 import { cn } from '../../utils/cn';
 import { toastError } from '../../utils/toast';
 import { getUnreadNotificationCount } from '../../api/notificationsApi';
+import { WalkthroughOverlay, type WalkthroughStep } from '../../components/ui/WalkthroughOverlay';
 
 const AVAILABILITY_KEY = 'listener_availability_preference';
 
@@ -39,6 +40,42 @@ export const ListenerDashboard = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [bankConnected, setBankConnected] = useState(false);
   const [bankStatus, setBankStatus] = useState<'not_connected' | 'pending' | 'enabled'>('not_connected');
+  const [showListenerWalkthrough, setShowListenerWalkthrough] = useState(() => {
+    try { return !localStorage.getItem('listener_walkthrough_seen'); } catch { return false; }
+  });
+
+  const handleListenerWalkthroughDone = () => {
+    setShowListenerWalkthrough(false);
+    try { localStorage.setItem('listener_walkthrough_seen', '1'); } catch {}
+  };
+
+  const LISTENER_WALKTHROUGH_STEPS: WalkthroughStep[] = [
+    {
+      emoji: '🎧',
+      title: 'Welcome, Support Guide',
+      body: 'You\'re here to make a real difference. When venters reach out, you\'ll receive a request to accept or decline — no pressure.',
+    },
+    {
+      emoji: '🟢',
+      title: 'Go online to receive requests',
+      body: 'Toggle "Available" to let venters know you\'re ready. Toggle it off whenever you need a break — your time is yours.',
+    },
+    {
+      emoji: '📲',
+      title: 'Incoming requests',
+      body: 'When a venter needs support, you\'ll see a request here. Click it to accept and start the session. Calls and chats both show up.',
+    },
+    {
+      emoji: '💰',
+      title: 'Your earnings',
+      body: 'You earn per minute for every session. Connect your bank account to receive payouts directly to your account.',
+    },
+    {
+      emoji: '🌟',
+      title: 'You\'re all set',
+      body: 'Toggle online, wait for a request, and start supporting. Thank you for being here — your presence matters.',
+    },
+  ];
 
   const handleAvailabilityToggle = async () => {
     setLoadingToggle(true);
@@ -403,6 +440,11 @@ export const ListenerDashboard = () => {
           </div>
         </section>
       </div>
+      <WalkthroughOverlay
+        visible={showListenerWalkthrough}
+        steps={LISTENER_WALKTHROUGH_STEPS}
+        onDone={handleListenerWalkthroughDone}
+      />
     </div>
   );
 };

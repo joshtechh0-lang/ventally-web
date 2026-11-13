@@ -17,6 +17,7 @@ import { getUnreadNotificationCount } from '../../api/notificationsApi';
 import apiInstance from '../../api/apiInstance';
 import { useWallet } from '../../api/hooks/useWallet';
 import i18n from '../../locales/i18n';
+import { WalkthroughOverlay, type WalkthroughStep } from '../../components/ui/WalkthroughOverlay';
 
 export const VenterDashboard = () => {
   const { t } = useTranslation();
@@ -39,6 +40,42 @@ export const VenterDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [onlineListeners, setOnlineListeners] = useState<number | null>(null);
+  const [showVenterWalkthrough, setShowVenterWalkthrough] = useState(() => {
+    try { return !localStorage.getItem('venter_walkthrough_seen'); } catch { return false; }
+  });
+
+  const handleVenterWalkthroughDone = () => {
+    setShowVenterWalkthrough(false);
+    try { localStorage.setItem('venter_walkthrough_seen', '1'); } catch {}
+  };
+
+  const VENTER_WALKTHROUGH_STEPS: WalkthroughStep[] = [
+    {
+      emoji: '👋',
+      title: 'Welcome to Ventally',
+      body: 'This is your safe space. Talk or chat with a real, trained Support Guide whenever you need it — anonymously and privately.',
+    },
+    {
+      emoji: '🎙️',
+      title: 'Start a session',
+      body: 'Click "Start Voice" for a live call or "Start Chat" for a text session. You\'ll be matched with an available Support Guide in seconds.',
+    },
+    {
+      emoji: '💳',
+      title: 'Pay as you go — or subscribe',
+      body: 'You\'re only billed for the time you use. Upgrade to a Member plan for unlimited monthly minutes with rollover.',
+    },
+    {
+      emoji: '👛',
+      title: 'Your Wallet',
+      body: 'Top up your balance anytime. Referral credits and ad rewards show up here too.',
+    },
+    {
+      emoji: '🌱',
+      title: 'Track your journey',
+      body: 'Log your mood, add reflections, and watch your wellness trends over time — all in one place.',
+    },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -532,6 +569,11 @@ export const VenterDashboard = () => {
           </div>
         </div>
       )}
+      <WalkthroughOverlay
+        visible={showVenterWalkthrough}
+        steps={VENTER_WALKTHROUGH_STEPS}
+        onDone={handleVenterWalkthroughDone}
+      />
     </div>
   );
 };
