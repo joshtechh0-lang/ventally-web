@@ -25,7 +25,7 @@ function AdSenseBanner() {
       className="adsbygoogle"
       style={{ display: 'block', width: '100%', minHeight: 250 }}
       data-ad-client="ca-pub-2329497752967659"
-      data-ad-slot="XXXXXXXXXX"                   // TODO: replace with real ad slot
+      data-ad-slot="8315818647"
       data-ad-format="auto"
       data-full-width-responsive="true"
     />
