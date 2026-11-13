@@ -24,7 +24,7 @@ function AdSenseBanner() {
       ref={ref as any}
       className="adsbygoogle"
       style={{ display: 'block', width: '100%', minHeight: 250 }}
-      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"   // TODO: replace with real publisher ID
+      data-ad-client="ca-pub-2329497752967659"
       data-ad-slot="XXXXXXXXXX"                   // TODO: replace with real ad slot
       data-ad-format="auto"
       data-full-width-responsive="true"
