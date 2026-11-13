@@ -433,18 +433,19 @@ export const ChatScreen = () => {
 
       {/* Input - only shown when chat is active, matching mobile */}
       {isChatActive && (
-        {/* Ad-minutes warning banner */}
-        {showAdWarning && isVenterUser && adMinutes > 0 && (
-          <div className="border-t border-amber-500/30 bg-amber-500/10 px-4 py-2.5 flex items-start gap-2 flex-shrink-0">
-            <span className="text-base mt-0.5">⚠️</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-amber-300">About 2 minutes of free time remaining</p>
-              <p className="text-xs text-white/55">Your ad reward is almost up. Add funds to keep going.</p>
+        <>
+          {/* Ad-minutes warning banner */}
+          {showAdWarning && isVenterUser && adMinutes > 0 && (
+            <div className="border-t border-amber-500/30 bg-amber-500/10 px-4 py-2.5 flex items-start gap-2 flex-shrink-0">
+              <span className="text-base mt-0.5">⚠️</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-amber-300">About 2 minutes of free time remaining</p>
+                <p className="text-xs text-white/55">Your ad reward is almost up. Add funds to keep going.</p>
+              </div>
+              <button onClick={() => setShowAdWarning(false)} className="text-white/30 hover:text-white/60 text-sm flex-shrink-0">✕</button>
             </div>
-            <button onClick={() => setShowAdWarning(false)} className="text-white/30 hover:text-white/60 text-sm flex-shrink-0">✕</button>
-          </div>
-        )}
-        <div className="glass border-t border-white/8 px-4 sm:px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] flex items-end gap-3 flex-shrink-0 lg:rounded-b-3xl">
+          )}
+          <div className="glass border-t border-white/8 px-4 sm:px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] flex items-end gap-3 flex-shrink-0 lg:rounded-b-3xl">
           <GlassCard
             className="flex-1"
             padding="none"
@@ -482,6 +483,7 @@ export const ChatScreen = () => {
             <Send size={18} className={input.trim() ? 'text-primary' : 'text-white/80'} />
           </button>
         </div>
+        </>
       )}
 
       {/* Venter crisis instant-help overlay */}
