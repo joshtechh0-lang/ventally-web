@@ -379,6 +379,23 @@ export const ListenerDashboard = () => {
           </GlassCard>
         )}
 
+        {/* Payout rates info */}
+        <GlassCard bordered padding="md" rounded="2xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-2">Your payout rate</p>
+          <div className="flex gap-4 mb-2">
+            <div>
+              <p className="text-base font-bold text-white">~$0.15<span className="text-xs font-normal text-white/60">/min</span></p>
+              <p className="text-xs text-white/50 mt-0.5">Ad-funded sessions</p>
+            </div>
+            <div className="w-px bg-white/10" />
+            <div>
+              <p className="text-base font-bold text-white">~$0.20<span className="text-xs font-normal text-white/60">/min</span></p>
+              <p className="text-xs text-white/50 mt-0.5">Paid sessions</p>
+            </div>
+          </div>
+          <p className="text-xs text-white/35">🔒 Your rate is locked in at the start of each session</p>
+        </GlassCard>
+
         {/* Quick access — wallet + history (no earnings summary on this screen) */}
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-white/80 mb-3">
