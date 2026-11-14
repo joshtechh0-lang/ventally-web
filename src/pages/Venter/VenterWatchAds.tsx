@@ -12,39 +12,32 @@ import apiInstance from '../../api/apiInstance';
 // ---------------------------------------------------------------------------
 declare global { interface Window { adsbygoogle: unknown[] } }
 
-function AdSenseBanner({ visible }: { visible: boolean }) {
-  const pushed = useRef(false);
+// Each ad watch gets its own AdSenseBanner instance via the `key` prop,
+// so a fresh <ins> element is created for every ad — AdSense requires a
+// new element for each push() call; reusing the same element silently fails.
+function AdSenseBanner() {
   useEffect(() => {
-    if (!visible || pushed.current) return;
-    // Give the browser one frame to paint the container at its real width
-    // before AdSense measures availableWidth — prevents the blank-ad problem
-    // that occurs when the <ins> becomes visible mid-render.
+    // rAF + 50ms gives the browser time to paint the element at its real
+    // dimensions before AdSense measures availableWidth.
     const raf = requestAnimationFrame(() => {
-      setTimeout(() => {
+      const t = setTimeout(() => {
         try {
           (window.adsbygoogle = window.adsbygoogle || []).push({});
-          pushed.current = true;
         } catch {}
-      }, 50);
+      }, 100);
+      return () => clearTimeout(t);
     });
     return () => cancelAnimationFrame(raf);
-  }, [visible]);
+  }, []); // runs once on mount — each new key= gives a fresh mount
 
   return (
-    // Always in the DOM so AdSense can crawl it; hidden with visibility
-    // rather than display:none so the layout width is measured correctly.
     <ins
       className="adsbygoogle"
-      style={{
-        display: 'block',
-        width: '100%',
-        minHeight: 250,
-        visibility: visible ? 'visible' : 'hidden',
-      }}
+      style={{ display: 'block', width: '100%', height: '250px' }}
       data-ad-client="ca-pub-2329497752967659"
       data-ad-slot="8315818647"
-      data-ad-format="auto"
-      data-full-width-responsive="true"
+      data-ad-format="rectangle"
+      data-full-width-responsive="false"
     />
   );
 }
@@ -197,18 +190,21 @@ export const VenterWatchAds = () => {
       {/* Ad player area */}
       {!allDone && !rewardClaimed && (
         <GlassCard bordered padding="lg" className="mb-6 text-center">
-          {/* AdSense unit — always in DOM so width is measurable; visible only when watching */}
-          <div
-            className="w-full rounded-2xl mb-4 overflow-hidden"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              minHeight: 250,
-              display: watching ? 'block' : 'none',
-            }}
-          >
-            <AdSenseBanner visible={watching} />
-          </div>
+          {/* AdSense unit — only mounted while watching; key=adsWatched
+              forces a fresh <ins> element for each new ad, which is
+              required because AdSense won't re-fill a used element */}
+          {watching && (
+            <div
+              className="w-full rounded-2xl mb-4 overflow-hidden"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                minHeight: 250,
+              }}
+            >
+              <AdSenseBanner key={adsWatched} />
+            </div>
+          )}
 
           {watching ? (
             <>
