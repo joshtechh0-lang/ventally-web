@@ -12,32 +12,35 @@ import apiInstance from '../../api/apiInstance';
 // ---------------------------------------------------------------------------
 declare global { interface Window { adsbygoogle: unknown[] } }
 
-function AdSenseBanner() {
-  const ref = useRef<HTMLElement>(null);
+function AdSenseBanner({ visible }: { visible: boolean }) {
+  const pushed = useRef(false);
   useEffect(() => {
-    // Wait for the adsbygoogle script to initialise before pushing
-    const push = () => {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch {}
-    };
-    if (typeof window.adsbygoogle !== 'undefined') {
-      push();
-    } else {
-      // Script still loading — wait for it
-      const script = document.querySelector('script[src*="adsbygoogle"]');
-      if (script) {
-        script.addEventListener('load', push, { once: true });
-      } else {
-        push(); // fallback
-      }
-    }
-  }, []);
+    if (!visible || pushed.current) return;
+    // Give the browser one frame to paint the container at its real width
+    // before AdSense measures availableWidth — prevents the blank-ad problem
+    // that occurs when the <ins> becomes visible mid-render.
+    const raf = requestAnimationFrame(() => {
+      setTimeout(() => {
+        try {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          pushed.current = true;
+        } catch {}
+      }, 50);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [visible]);
+
   return (
+    // Always in the DOM so AdSense can crawl it; hidden with visibility
+    // rather than display:none so the layout width is measured correctly.
     <ins
-      ref={ref as any}
       className="adsbygoogle"
-      style={{ display: 'block', width: '100%', minHeight: 250 }}
+      style={{
+        display: 'block',
+        width: '100%',
+        minHeight: 250,
+        visibility: visible ? 'visible' : 'hidden',
+      }}
       data-ad-client="ca-pub-2329497752967659"
       data-ad-slot="8315818647"
       data-ad-format="auto"
@@ -194,12 +197,21 @@ export const VenterWatchAds = () => {
       {/* Ad player area */}
       {!allDone && !rewardClaimed && (
         <GlassCard bordered padding="lg" className="mb-6 text-center">
+          {/* AdSense unit — always in DOM so width is measurable; visible only when watching */}
+          <div
+            className="w-full rounded-2xl mb-4 overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              minHeight: 250,
+              display: watching ? 'block' : 'none',
+            }}
+          >
+            <AdSenseBanner visible={watching} />
+          </div>
+
           {watching ? (
             <>
-              {/* Google AdSense ad unit — shown during the countdown */}
-              <div className="w-full rounded-2xl mb-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', minHeight: 250 }}>
-                <AdSenseBanner />
-              </div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-white/40">Ad {adsWatched + 1} of {AD_COUNT} — please keep this page open</p>
                 <p className="text-white font-bold text-lg tabular-nums">{countdown}s</p>
