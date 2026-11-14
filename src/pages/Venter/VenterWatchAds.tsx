@@ -122,13 +122,16 @@ export const VenterWatchAds = () => {
       saveProgress(0); // reset for tomorrow
       toastSuccess(type === 'voice' ? '5 free voice minutes added to your Wallet!' : '20 free chat messages added to your Wallet!');
       setTimeout(() => navigate('/venter'), 1800);
-    } catch {
-      // Fallback: grant reward client-side even if backend call fails
-      setRewardClaimed(true);
-      setShowRewardChoice(false);
-      saveProgress(0);
-      toastSuccess(type === 'voice' ? '5 free voice minutes unlocked!' : '20 free chat messages unlocked!');
-      setTimeout(() => navigate('/venter'), 1800);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      if (err?.response?.status === 409) {
+        // Already claimed today — still navigate away cleanly
+        toastError(msg || 'You already claimed your reward today. Come back tomorrow!');
+        saveProgress(0);
+        setTimeout(() => navigate('/venter'), 2000);
+      } else {
+        toastError(msg || 'Could not claim reward — please try again.');
+      }
     } finally {
       setClaiming(false);
     }
