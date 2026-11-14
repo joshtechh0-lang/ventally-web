@@ -15,9 +15,23 @@ declare global { interface Window { adsbygoogle: unknown[] } }
 function AdSenseBanner() {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {}
+    // Wait for the adsbygoogle script to initialise before pushing
+    const push = () => {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch {}
+    };
+    if (typeof window.adsbygoogle !== 'undefined') {
+      push();
+    } else {
+      // Script still loading — wait for it
+      const script = document.querySelector('script[src*="adsbygoogle"]');
+      if (script) {
+        script.addEventListener('load', push, { once: true });
+      } else {
+        push(); // fallback
+      }
+    }
   }, []);
   return (
     <ins
