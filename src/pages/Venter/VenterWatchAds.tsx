@@ -72,12 +72,14 @@ export const VenterWatchAds = () => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const allDone = adsWatched >= AD_COUNT;
+  // True only if user just finished watching in this session (not restored from storage)
+  const [completedThisSession, setCompletedThisSession] = useState(false);
 
   useEffect(() => {
-    if (allDone && !rewardClaimed) {
+    if (allDone && !rewardClaimed && completedThisSession) {
       setShowRewardChoice(true);
     }
-  }, [adsWatched]);
+  }, [adsWatched, completedThisSession]);
 
   const startAd = () => {
     if (watching || allDone) return;
@@ -91,6 +93,7 @@ export const VenterWatchAds = () => {
           const next = adsWatched + 1;
           setAdsWatched(next);
           saveProgress(next);
+          if (next >= AD_COUNT) setCompletedThisSession(true);
           return 0;
         }
         return prev - 1;
@@ -153,10 +156,26 @@ export const VenterWatchAds = () => {
           {adsWatched === 0 && 'Watch 3 ads to earn your free session reward.'}
           {adsWatched === 1 && '1 of 3 done — 2 more to go!'}
           {adsWatched === 2 && '2 of 3 done — almost there!'}
-          {adsWatched >= 3 && !rewardClaimed && '🎉 All 3 watched — choose your reward below!'}
+          {adsWatched >= 3 && !rewardClaimed && completedThisSession && '🎉 All 3 watched — choose your reward below!'}
+          {adsWatched >= 3 && !rewardClaimed && !completedThisSession && '✅ You already earned today\'s reward — come back tomorrow!'}
           {rewardClaimed && '✅ Reward added to your Wallet!'}
         </p>
       </GlassCard>
+
+      {/* Already completed today — no reward to show, no ads to watch */}
+      {allDone && !rewardClaimed && !completedThisSession && (
+        <GlassCard bordered padding="lg" className="mb-6 text-center">
+          <div className="text-4xl mb-3">🌙</div>
+          <h3 className="text-white font-bold text-lg mb-2">You're all done for today</h3>
+          <p className="text-white/55 text-sm mb-5">You've already earned your free session reward today. Come back tomorrow to earn again.</p>
+          <button
+            onClick={() => navigate('/venter')}
+            className="text-primary text-sm font-semibold hover:underline"
+          >
+            Back to home
+          </button>
+        </GlassCard>
+      )}
 
       {/* Ad player area */}
       {!allDone && !rewardClaimed && (
@@ -201,8 +220,8 @@ export const VenterWatchAds = () => {
         </GlassCard>
       )}
 
-      {/* Reward choice */}
-      {showRewardChoice && !rewardClaimed && (
+      {/* Reward choice — only shown after completing in this session */}
+      {showRewardChoice && !rewardClaimed && completedThisSession && (
         <GlassCard bordered padding="lg" className="mb-6">
           <div className="text-center mb-6">
             <div className="text-4xl mb-3">🎁</div>
