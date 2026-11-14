@@ -2,7 +2,7 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!ads\\.txt|app-ads\\.txt|robots\\.txt|sitemap\\.xml|favicon\\.svg|.*\\.[a-z0-9]+$).*)",
       "destination": "/index.html"
     }
   ],
