@@ -41,13 +41,13 @@ export const ChatScreen = () => {
   const [showListenerCrisisModal, setShowListenerCrisisModal] = useState(false);
   const [showCrisisActivated, setShowCrisisActivated] = useState(false);
   const [isChatActive, setIsChatActive] = useState(true);
+  const isVenterUser = currentUser?.userType === 'venter' || currentUser?.role === 'venter';
   // Ad-session message tracking (checklist: warn at 2 outgoing messages left, cap at 20)
   const paymentMode = (location.state?.paymentMode || '') as string;
   const isAdSession = isVenterUser && paymentMode === 'ad';
   const AD_CHAT_LIMIT = 20;
   const [adMsgUsed, setAdMsgUsed] = useState(0);
   const [showAdWarning, setShowAdWarning] = useState(false);
-  const isVenterUser = currentUser?.userType === 'venter' || currentUser?.role === 'venter';
 
   // Get other participant info
   const getOtherName = () => {
