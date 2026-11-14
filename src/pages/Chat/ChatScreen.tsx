@@ -41,11 +41,12 @@ export const ChatScreen = () => {
   const [showListenerCrisisModal, setShowListenerCrisisModal] = useState(false);
   const [showCrisisActivated, setShowCrisisActivated] = useState(false);
   const [isChatActive, setIsChatActive] = useState(true);
-  // Ad-minutes heads-up
-  const [adMinutes, setAdMinutes] = useState(0);
+  // Ad-session message tracking (checklist: warn at 2 outgoing messages left, cap at 20)
+  const paymentMode = (location.state?.paymentMode || '') as string;
+  const isAdSession = isVenterUser && paymentMode === 'ad';
+  const AD_CHAT_LIMIT = 20;
+  const [adMsgUsed, setAdMsgUsed] = useState(0);
   const [showAdWarning, setShowAdWarning] = useState(false);
-  const adWarningShown = useRef(false);
-  const sessionStartTime = useRef(Date.now());
   const isVenterUser = currentUser?.userType === 'venter' || currentUser?.role === 'venter';
 
   // Get other participant info
@@ -237,29 +238,11 @@ export const ChatScreen = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Fetch ad_minutes for venter and set up warning timer
+  // Show "2 messages left" warning when venter has used 18/20 in an ad session
   useEffect(() => {
-    if (!isVenterUser) return;
-    apiInstance.get('wallet/balance').then((res: any) => {
-      const bal = res?.data?.balance ?? res?.data ?? {};
-      const adMins = bal?.ad_minutes ?? 0;
-      setAdMinutes(adMins);
-    }).catch(() => {});
-  }, [isVenterUser]);
-
-  useEffect(() => {
-    if (!isVenterUser || adMinutes <= 0 || adWarningShown.current) return;
-    const interval = setInterval(() => {
-      const elapsedSeconds = (Date.now() - sessionStartTime.current) / 1000;
-      const remainingSeconds = (adMinutes * 60) - elapsedSeconds;
-      if (remainingSeconds <= 120 && !adWarningShown.current) {
-        adWarningShown.current = true;
-        setShowAdWarning(true);
-        clearInterval(interval);
-      }
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [isVenterUser, adMinutes]);
+    if (!isAdSession) return;
+    if (adMsgUsed === AD_CHAT_LIMIT - 2) setShowAdWarning(true);
+  }, [isAdSession, adMsgUsed]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || !id) return;
@@ -285,12 +268,14 @@ export const ChatScreen = () => {
       console.log('[Chat] Sending message:', { conversationId: id, content });
       socketService.emit('chat:message', { conversationId: id, content });
       console.log('[Chat] Message emitted successfully');
+      // Count outgoing venter messages in ad sessions
+      if (isAdSession) setAdMsgUsed(prev => prev + 1);
     } catch (err) {
       console.error('[Chat] Failed to send message:', err);
     } finally {
       setSending(false);
     }
-  }, [input, id, currentUser?.id]);
+  }, [input, id, currentUser?.id, isAdSession]);
 
   const title = getOtherName();
 
@@ -434,13 +419,23 @@ export const ChatScreen = () => {
       {/* Input - only shown when chat is active, matching mobile */}
       {isChatActive && (
         <>
-          {/* Ad-minutes warning banner */}
-          {showAdWarning && isVenterUser && adMinutes > 0 && (
+          {/* Ad-session message warnings */}
+          {isAdSession && adMsgUsed >= AD_CHAT_LIMIT && (
+            <div className="border-t border-red-500/30 bg-red-500/10 px-4 py-2.5 flex items-start gap-2 flex-shrink-0">
+              <span className="text-base mt-0.5">🚫</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-red-300">You've used all 20 free messages</p>
+                <p className="text-xs text-white/55">Add funds or subscribe to keep chatting.</p>
+              </div>
+              <button onClick={() => navigate('/venter/add-funds')} className="text-xs text-primary font-semibold flex-shrink-0">Add funds</button>
+            </div>
+          )}
+          {isAdSession && showAdWarning && adMsgUsed < AD_CHAT_LIMIT && (
             <div className="border-t border-amber-500/30 bg-amber-500/10 px-4 py-2.5 flex items-start gap-2 flex-shrink-0">
               <span className="text-base mt-0.5">⚠️</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-amber-300">About 2 minutes of free time remaining</p>
-                <p className="text-xs text-white/55">Your ad reward is almost up. Add funds to keep going.</p>
+                <p className="text-xs font-semibold text-amber-300">2 outgoing messages left</p>
+                <p className="text-xs text-white/55">Your free ad reward is almost up.</p>
               </div>
               <button onClick={() => setShowAdWarning(false)} className="text-white/30 hover:text-white/60 text-sm flex-shrink-0">✕</button>
             </div>
@@ -454,8 +449,9 @@ export const ChatScreen = () => {
           >
             <textarea
               ref={inputRef}
-              placeholder={t('VenterChat.inputPlaceholder', 'Type a message...')}
+              placeholder={isAdSession && adMsgUsed >= AD_CHAT_LIMIT ? 'No messages remaining' : t('VenterChat.inputPlaceholder', 'Type a message...')}
               value={input}
+              disabled={isAdSession && adMsgUsed >= AD_CHAT_LIMIT}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -463,7 +459,7 @@ export const ChatScreen = () => {
                   sendMessage();
                 }
               }}
-              className="w-full bg-transparent text-white placeholder-gray-500 px-4 py-3 resize-none outline-none text-sm"
+              className="w-full bg-transparent text-white placeholder-gray-500 px-4 py-3 resize-none outline-none text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               rows={1}
               style={{ minHeight: '44px', maxHeight: '120px' }}
               maxLength={500}
@@ -472,7 +468,7 @@ export const ChatScreen = () => {
 
           <button
             onClick={sendMessage}
-            disabled={!input.trim() || sending}
+            disabled={!input.trim() || sending || (isAdSession && adMsgUsed >= AD_CHAT_LIMIT)}
             className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all flex-shrink-0"
             style={{
               background: input.trim()
