@@ -334,10 +334,10 @@ export const VenterDashboard = () => {
                       <span className="text-xs text-white/50">$0.39/min</span>
                     </button>
                   </div>
-                  {/* Ad reward if available */}
-                  {(balance?.ad_minutes ?? 0) > 0 && (
+                  {/* Use earned ad reward if available, otherwise show Try for free */}
+                  {(balance?.ad_minutes ?? 0) > 0 ? (
                     <button
-                      onClick={handleCall}
+                      onClick={() => navigate('/venter/watch-ads')}
                       className="w-full flex items-center gap-3 p-3 rounded-2xl bg-green-500/10 border border-green-500/25 hover:bg-green-500/15 transition-colors"
                     >
                       <span className="text-lg">🎁</span>
@@ -345,6 +345,20 @@ export const VenterDashboard = () => {
                         <p className="text-sm font-semibold text-green-300">Use your reward</p>
                         <p className="text-xs text-white/50">{balance.ad_minutes} free minutes earned</p>
                       </div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/venter/watch-ads')}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl glass border border-white/10 hover:bg-white/10 transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-base">▶</span>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-semibold text-white">Try 5 minutes free</p>
+                        <p className="text-xs text-white/50">Watch 3 short ads to earn a free session</p>
+                      </div>
+                      <span className="text-white/30 text-lg">›</span>
                     </button>
                   )}
                 </div>
